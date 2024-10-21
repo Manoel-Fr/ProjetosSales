@@ -1,0 +1,61 @@
+<template>
+    <lightning-combobox
+            name="progress"
+            label="Moedas"
+            value={selecionarMoedas}
+            placeholder="Selecione a Moeda"
+            options={options}
+            onchange={handleChange} ></lightning-combobox>
+    <br>        
+    <p>A COTAÇÃO DE HOJE É: <b>R$ {valueMoeda}</b></p>
+    <br>
+    <div>
+        <lightning-input 
+        type="number"
+        name="seven" 
+        value={selecionarData} 
+        onchange={handleAmountChange}
+        placeholder="DIGITE QUANTOS DIAS DESEJA RETONAR" 
+        label=""
+        min="0"
+        max="365"
+        step="1"
+       >
+    </lightning-input>
+    <br>
+        <p>
+            DIAS SELECIONADOS: <b>{selecionarData}</b>
+        </p>
+    </div>
+    <br>
+    <div style="height: 200px;">
+        <template if:true={isloading}>
+            <div class="exampleHolder">
+                <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+            </div>
+        </template>
+        <lightning-datatable 
+           if:true={data}
+                key-field="id"
+                data={data}
+                columns={columns}
+                hide-checkbox-column>
+        </lightning-datatable>
+        <lightning-button  variant="brand" label="Salvar" title="Primary action" onclick={saveCoin} class="slds-m-right_x-small"></lightning-button>
+    </div>
+    <br>
+    <br>
+    <br>
+        <lightning-card title="Histórico de Pesquisa">
+         <template if:true={history} >
+          <lightning-datatable
+                key-field="code"
+                data={history}
+                columns={pesquisa}
+                hide-checkbox-column>
+          </lightning-datatable>
+       </template>
+        </lightning-card>
+
+
+</template>

@@ -1,0 +1,15 @@
+.flexRow{
+    display: flex;
+    flex-direction: end;
+}
+.actions{
+    padding: 10px;
+    display: flex;
+    justify-content: end;
+    flex-direction: row;
+   
+   
+}
+.head{
+    align-items: center;
+}

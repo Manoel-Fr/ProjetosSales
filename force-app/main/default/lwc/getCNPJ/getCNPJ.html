@@ -1,0 +1,30 @@
+<template>
+ 
+      <lightning-card  title=""  >
+         <div class="">  
+
+            <lightning-input type="text" label="Razão Social, Nome Fantasia ou CNPJ" value={input} placeholder="Digite" onchange={handleInputChange}></lightning-input>
+
+          
+
+            <lightning-button label="Buscar" title="Non-primary action" onclick={buscar} class="actions"></lightning-button>
+          
+          
+         </div>
+
+            
+       <template if:true={empresa}>
+           <template for:each={empresa} for:item="item">
+                <div key={item.content} > 
+                    <p><strong>{item.razao_social}</strong></p>
+                    <p>{item.cnpj}</p>
+                    <p>{item.municipio}{item.uf}</p>
+                </div>
+            </template>
+        </template>
+        
+        
+        </lightning-card>
+      
+
+ </template>

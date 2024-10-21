@@ -1,0 +1,241 @@
+<apex:page applyBodyTag="false" renderAs="PDF" standardController="Opportunity">
+<head>
+    <style>
+            @page {
+          
+          size: A4 Portrait;
+          margin: 5mm;
+          font-size: 10px;
+          margin-bottom: 3.5cm;
+          @bottom-right {
+              font-weight: normal;
+              font-family: Arial, Helvetica, sans-serif;
+          }
+          @top-center {
+                  content: element(header);
+          }
+          @bottom-left {
+              content: element(footer);
+          }
+      }
+      table{
+          width: 100%;
+          -fs-table-paginate: paginate;
+          table-layout: sfixed;
+          border-collapse: separate;
+          border-spacing: 0;
+          height: min-content;
+      }
+      .lines12 tr { line-height: 12px; }
+
+      .lines16 tr{ line-height: 16px; }
+
+    
+      *{
+          font-family: "Segoe UI", Arial, sans-serif;
+      }
+      .top{
+          text-align: right;
+      }
+      .sizep{
+          font-size: 12px;
+      }
+      .h2{
+          font-size: 13px;
+          font-weight: bold;
+      }
+      .textCenter{
+          text-align: center;
+      }
+      .textRight{
+          text-align: right;
+      }
+      .whiteBold{
+          font-weight: bold;
+          color: white;
+      }
+
+      .mainColor{
+          background-color: #006499;
+      }
+
+      .spaceTable{margin-top: 10px;}
+
+      .ligthColor{
+          background-color: #f5f5f5;
+      }
+      .totalsSize{
+          width: 90%;
+          text-align: right;
+      }
+      .alignR{
+          text-align: right;
+      }
+
+      .footer {
+          position: running(footer);
+      }
+      .bold{
+          font-weight: bold;
+      }  
+    </style>
+
+
+</head>
+
+<body>
+   <table>
+        <tr>
+            <td style="width: 30%; text-align: center;">
+                <apex:image width="150px" value="/resource/img_opp/logo.png"/>
+            </td>
+            <td>
+                <table class="lines12">
+                    <tr>
+                        <td><span class="bold"> Opportunity ID </span></td>
+                        <td>: {!Opportunity.AccountId} </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+   </table>
+   <table class="spaceTable">
+    <tr class="textCenter whiteBold mainColor sizep">
+      
+        <td colspan="4">INFORMATION</td>
+        
+    </tr>
+        <tr  class="h2 " style="line-height: 16px;">
+            <td colspan="2">
+                {!Opportunity.Name}
+            </td>
+        </tr>
+      
+        <tr>
+            <td class="bold">Amount</td>
+            <td>: {!Opportunity.Amount}</td>
+            <td  class="bold"> 
+                Type</td>
+            <td>: {!Opportunity.Type}</td>
+        </tr>
+        <tr>
+            <td class="bold"> Private </td>
+            <td>: {!Opportunity.IsPrivate}</td>
+            <td class="bold"> Main Competitor </td>
+            <td>: {!Opportunity.MainCompetitors__c}</td>
+        </tr>
+         <tr>
+            <td class="bold"> Probability (%) </td>
+            <td>: {!Opportunity.probability}</td>
+            <td class="bold"> Delivery/Installation Status</td>
+            <td>: {!Opportunity.DeliveryInstallationStatus__c}</td>
+         </tr>
+    </table>
+    <table class="spaceTable">
+        <tr>
+           <td class=" textCenter whiteBold mainColor sizep " style="color:white" colspan="4"> ORDERS </td>
+        </tr>
+           <tr> 
+              <td class="bold"> Order Number </td>
+              <td>: {!Opportunity.OrderNumber__c}</td>
+           </tr>
+           <tr>
+                <td class="bold"> Tracking Number  </td>
+                <td>: {!Opportunity.TrackingNumber__c}</td> 
+           </tr>
+       <tr>
+          <td class="bold"> Current Generator </td>
+           <td>: {!Opportunity.CurrentGenerators__c}</td>
+       </tr>
+    </table>
+    <br/>
+    <br/>
+    <table class="spaceTable">
+      <tr>
+        <td>
+            <span class="bold "> Description : </span>
+        </td>
+        <tr>
+            <td>{!Opportunity.Description}</td>
+        </tr>
+      </tr>
+    </table>
+
+
+    <table class="spaceTable">
+     <tr class="whiteBold mainColor sizep textCenter">
+        <th>Name</th>
+        <th>Expected Revenue</th>
+        <th>Stage</th>
+    </tr>
+    <tr class=" bold textCenter ">
+        <td >{!Opportunity.Name}</td>
+        <td>{!Opportunity.ExpectedRevenue}</td>
+        <td>{!Opportunity.StageName}</td>
+    </tr>
+    </table>
+    
+
+    <table class="spaceTable">
+        <tr class=" mainColor">
+            <td></td>
+            <br/>
+            <br/>
+        </tr>
+    </table>
+    
+
+    <table class="spaceTable">
+            <tr class="mainColor whiteBold sizep">
+                <th> Product </th>
+                <th class="textCenter"> Quantity </th>
+                <th class="textCenter"> Price </th>
+            </tr>
+        <apex:repeat value="{!Opportunity.OpportunityLineItems}" var="item">
+            <tr>
+                <td class="sizep">{!item.Name}</td>
+                <td class="sizep textCenter">{!item.Quantity}</td>
+                <td class="sizep textCenter ">{!item.UnitPrice}</td>
+            </tr>
+        </apex:repeat>
+          
+    </table>
+    <table class="spaceTable">
+        <tr class=" mainColor">
+            <td></td>
+        </tr>
+    </table>
+
+    <table class="spaceTable">
+        <tr>
+            <td class="totalsSize bold">Total Price: </td>
+            <td>
+                <apex:repeat value="{!Opportunity.OpportunityLineItems}" var="item">
+            <apex:outputText value="{0,number, ###,###,###,##0.00}">
+                        <apex:param value= "{!item.TotalPrice}" />
+                    </apex:outputText>
+                </apex:repeat>
+                </td>  
+        </tr>
+    </table>
+    
+ <br/>
+ <br/>
+ <br/>
+      <table class="spaceTable">
+        <tr class="">
+            <td class="bold alignR"> Close Date:
+    
+     <apex:outputText value="{0, date, MMMM d','  yyyy}">
+     <apex:param value="{!Opportunity.CloseDate}" /> 
+     </apex:outputText>
+    </td>
+        </tr>
+      </table>
+ 
+
+</body>
+
+
+</apex:page>
