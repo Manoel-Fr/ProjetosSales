@@ -2,26 +2,18 @@ public with sharing class BuscaCnpj {
 
   @AuraEnabled
 
-  public static Map<String,object> getInfo (String pesquisa , String cnpj ) {
+  public static Map<String,object> getInfo (String pesquisa) {
     
+  pesquisa = pesquisa.toUpperCase();
 
-      
-  String formatCnpj = cnpj.replace('.' , '').replace('/', '').replace('-','');
-  
-
- if(cnpj.length() == 18){
-      cnpj = formatCnpj;
- }
    
-   String query;
-   
-   pesquisa = '%' + pesquisa + '%';
+  String likepesq = '\'%' + pesquisa + '%\''; 
 
-   query = 'SELECT * FROM cnpj WHERE cnpj = :cnpj OR razao_social LIKE :pesquisa OR nome_fantasia LIKE :pesquisa LIMIT 1 OFFSET 0';
+  String query = 'SELECT cnpj, razao_social , nome_fantasia , municipio, uf FROM cnpj WHERE cnpj LIKE '+ likepesq +' OR razao_social LIKE '+ likepesq +' OR nome_fantasia LIKE '+ likepesq +' LIMIT 100 OFFSET 0';
    
 
-   String url = 'https://nitleads-new.datago.com.br/api/getone/'+(String.isNotEmpty(cnpj) ? cnpj : pesquisa); 
-   
+   string url = 'https://nitleads-new.datago.com.br/api';  
+     
    HttpRequest req = new HttpRequest(); 
   req.setEndpoint(url);
   req.setMethod('POST');

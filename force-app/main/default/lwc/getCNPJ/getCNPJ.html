@@ -1,7 +1,7 @@
 <template>
  
       <lightning-card  title=""  >
-         <div class="">  
+         <div class="getEm">  
 
             <lightning-input type="text" label="Razão Social, Nome Fantasia ou CNPJ" value={input} placeholder="Digite" onchange={handleInputChange}></lightning-input>
 
@@ -12,18 +12,25 @@
           
          </div>
 
-            
-       <template if:true={empresa}>
-           <template for:each={empresa} for:item="item">
-                <div key={item.content} > 
-                    <p><strong>{item.razao_social}</strong></p>
-                    <p>{item.cnpj}</p>
-                    <p>{item.municipio}{item.uf}</p>
-                </div>
-            </template>
-        </template>
-        
-        
+      
+    <div class="cardEm">
+      <template for:each={result} for:item="item">
+         <lightning-card key={item.cnpj} >
+            <div class="criarLC">
+                  <lightning-button-menu alternative-text="Show menu" variant="container">
+                     <lightning-menu-item value="MenuLead" label="Criar Lead"></lightning-menu-item>
+                     <lightning-menu-item value="MenuConta" label="Criar Conta"></lightning-menu-item>
+                  </lightning-button-menu>
+            </div>
+                  
+               <p><strong>{item.razao_social}</strong></p> 
+               <p>{item.cnpj}</p>
+               <p>{item.municipio} - {item.uf}</p>
+         </lightning-card>
+      </template>
+      </div>
+
+
         </lightning-card>
       
 

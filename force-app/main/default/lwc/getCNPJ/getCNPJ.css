@@ -13,3 +13,16 @@
 .head{
     align-items: center;
 }
+
+.cardEm {
+    padding-left: 10px;
+   
+}
+.getEm{
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.criarLC {
+    text-align: end;
+
+}

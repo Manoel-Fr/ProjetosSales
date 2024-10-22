@@ -4,7 +4,7 @@ import getInfo from '@salesforce/apex/BuscaCnpj.getInfo';
 export default class GetCNPJ extends LightningElement {
     @track input = '';
     @track error;
-    @track empresa = [];
+    @track result;
   
 
     handleInputChange(event) {
@@ -15,14 +15,17 @@ export default class GetCNPJ extends LightningElement {
 
      async buscar() {
         try {
-            let result = await getInfo({cnpj: this.input, pesquisa: this.input})
-            this.empresa = result || [];
+            if(this.input){
+            let result = await getInfo({pesquisa: this.input})
+            this.result = result?.content || [];
 
-            console.log('resultado', this.empresa )
+            console.log('resultado', this.result )
+            }
 
-        } catch(error) {
+        } catch (error) {
             this.error = error;
         }
+    
 
     }
     connectedCallback () {
