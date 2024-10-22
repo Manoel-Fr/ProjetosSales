@@ -1,37 +1,41 @@
 <template>
- 
-      <lightning-card  title=""  >
-         <div class="getEm">  
+   
+    
+       <lightning-card>
+     
+         <div class="corCard">
+      
+         <div class="getEm" style="background-color: #d8dadc;">  
 
             <lightning-input type="text" label="Razão Social, Nome Fantasia ou CNPJ" value={input} placeholder="Digite" onchange={handleInputChange}></lightning-input>
 
-          
-
             <lightning-button label="Buscar" title="Non-primary action" onclick={buscar} class="actions"></lightning-button>
           
-          
+           
          </div>
+         
 
-      
     <div class="cardEm">
       <template for:each={result} for:item="item">
          <lightning-card key={item.cnpj} >
-            <div class="criarLC">
-                  <lightning-button-menu alternative-text="Show menu" variant="container">
-                     <lightning-menu-item value="MenuLead" label="Criar Lead"></lightning-menu-item>
-                     <lightning-menu-item value="MenuConta" label="Criar Conta"></lightning-menu-item>
-                  </lightning-button-menu>
-            </div>
-                  
-               <p><strong>{item.razao_social}</strong></p> 
+         
+              <div class="itemEm">
+
+               <p><strong>{item.razao_social}     <lightning-button-menu alternative-text="Show menu" variant="container" onselect={handleSelect}>
+                  <lightning-menu-item value="MenuLead" label="Criar Lead"></lightning-menu-item>
+                  <lightning-menu-item value="MenuConta" label="Criar Conta" ></lightning-menu-item>
+               </lightning-button-menu></strong></p> 
                <p>{item.cnpj}</p>
                <p>{item.municipio} - {item.uf}</p>
+               </div>
          </lightning-card>
       </template>
       </div>
+   
 
-
+      </div>
         </lightning-card>
-      
+     
+   
 
  </template>

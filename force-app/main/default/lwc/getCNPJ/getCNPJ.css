@@ -1,21 +1,15 @@
-.flexRow{
-    display: flex;
-    flex-direction: end;
-}
+
 .actions{
     padding: 10px;
     display: flex;
     justify-content: end;
     flex-direction: row;
-   
-   
+    
+    
 }
-.head{
-    align-items: center;
-}
-
 .cardEm {
     padding-left: 10px;
+    padding-right: 10px;
    
 }
 .getEm{
@@ -24,5 +18,18 @@
 }
 .criarLC {
     text-align: end;
+  
 
+}
+.itemEm {
+    border: 0.5px solid rgb(4, 0, 0);
+    border-radius: 6px;
+    padding-left: 6px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+
+} 
+.corCard{
+    background-color: #d8dadc;
+   
 }
