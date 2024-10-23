@@ -9,7 +9,7 @@ public with sharing class BuscaCnpj {
    
   String likepesq = '\'%' + pesquisa + '%\''; 
 
-  String query = 'SELECT cnpj, razao_social , nome_fantasia , municipio, uf FROM cnpj WHERE cnpj LIKE '+ likepesq +' OR razao_social LIKE '+ likepesq +' OR nome_fantasia LIKE '+ likepesq +' LIMIT 100 OFFSET 0';
+  String query = 'SELECT cnpj, razao_social , nome_fantasia , municipio, uf, email , telefone_1 , logradouro , cep , ddd_fax , ddd_1 , num_fax FROM cnpj WHERE cnpj LIKE '+ likepesq +' OR razao_social LIKE '+ likepesq +' OR nome_fantasia LIKE '+ likepesq +' LIMIT 100 OFFSET 0';
    
 
    string url = 'https://nitleads-new.datago.com.br/api';  

@@ -1,12 +1,15 @@
 import { LightningElement, track } from 'lwc';
 import getInfo from '@salesforce/apex/BuscaCnpj.getInfo';
 import { NavigationMixin } from 'lightning/navigation'
+import { encodeDefaultFieldValues } from "lightning/pageReferenceUtils";
 
 export default class GetCNPJ extends NavigationMixin(LightningElement) {
     @track input = '';
     @track error;
     @track result;
     @track selectMenu;
+    @track Empresa;
+  
   
 
     handleInputChange(event) {
@@ -32,36 +35,76 @@ export default class GetCNPJ extends NavigationMixin(LightningElement) {
             this.error = error;
         }
     
-    }
+    } 
+      navigateToNewLead(Empresa) {
+    
+        const defaultValues = encodeDefaultFieldValues ({
+            Company: Empresa.razao_social,
+            Phone: Empresa.ddd_1 +'-'+ Empresa.telefone_1,
+            Email: Empresa.email,
+            AnnualRevenue: "",
+            NumberOfEmployees:  "" ,
+            Street: Empresa.logradouro,
+            City: Empresa.municipio,
+            PostalCode: Empresa.cep,
+            State: Empresa.uf,
+            Fax: Empresa.ddd_fax +'-'+ Empresa.num_fax,
+           
+        });
+
+        this[NavigationMixin.Navigate]({
+            type: 'standard__objectPage',
+            attributes: {
+                objectApiName: 'Lead',
+                actionName: 'new',
+            },
+            state: {
+                defaultFieldValues: defaultValues,
+            },
+        });
+      }
+
+      navigateToNewAccount(Empresa){
+        
+        const defaultValues = encodeDefaultFieldValues({
+            Name: Empresa.razao_social,
+            Phone: Empresa.ddd_1 +'-'+ Empresa.telefone_1,
+            Fax: Empresa.ddd_fax +'-'+ Empresa.num_fax,
+            BillingStreet: Empresa.logradouro,
+            BillingCity: Empresa.municipio,
+            BillingPostalCode: Empresa.cep,
+            BillingState: Empresa.uf,
+            
 
 
-    handleSelect(event){
-        this.selectMenu = event.detail.value;
+           
+        });
+
+        this[NavigationMixin.Navigate]({
+            type: 'standard__objectPage',
+            attributes: {
+                objectApiName: 'Account',
+                actionName: 'new',
+            },
+            state: {
+                defaultFieldValues: defaultValues,
+            },
+        });
+
+      }
+
+
+      handleSelect(event){
+           this.selectMenu = event.detail.value
+           let Empresa = this.result.find(item =>  item.cnpj   === event.target.dataset.company);     
 
         if(this.selectMenu == 'MenuLead'){
-
-            this[NavigationMixin.Navigate]({
-                type: 'standard__objectPage',
-                attributes: {
-                    objectApiName: 'Lead',
-                    actionName: 'new'
-                }
-            });
-            
-        } else if (this.selectMenu == 'MenuConta'){
-
-            this[NavigationMixin.Navigate]({
-                type: 'standard__objectPage',
-                attributes: {
-                    objectApiName: 'Account',
-                    actionName: 'new'
-                }
-            });
+            this.navigateToNewLead(Empresa);
+        } else if(this.selectMenu == 'MenuConta'){
+            this.navigateToNewAccount(Empresa);
         }
-        
-        
-    }
-
+      }
+    
 
 
     connectedCallback () {

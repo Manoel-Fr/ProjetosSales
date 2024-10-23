@@ -1,9 +1,10 @@
 
 .actions{
-    padding: 10px;
+    padding: 20px;
     display: flex;
     justify-content: end;
     flex-direction: row;
+    margin-top: 10px;
     
     
 }
@@ -31,5 +32,7 @@
 } 
 .corCard{
     background-color: #d8dadc;
+    height: 100%;
+  
    
 }
