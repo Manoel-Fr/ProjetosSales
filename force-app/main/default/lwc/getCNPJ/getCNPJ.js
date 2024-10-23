@@ -37,6 +37,10 @@ export default class GetCNPJ extends NavigationMixin(LightningElement) {
     
     } 
       navigateToNewLead(Empresa) {
+
+        const completo = Empresa.nome_fantasia.split(' ');
+        const first = completo.slice(0,-1).join(' ');
+        const last = completo[completo.length-1];
     
         const defaultValues = encodeDefaultFieldValues ({
             Company: Empresa.razao_social,
@@ -49,6 +53,10 @@ export default class GetCNPJ extends NavigationMixin(LightningElement) {
             PostalCode: Empresa.cep,
             State: Empresa.uf,
             Fax: Empresa.ddd_fax +'-'+ Empresa.num_fax,
+            FirstName: first,
+            LastName:last,
+
+
            
         });
 
