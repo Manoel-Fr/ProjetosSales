@@ -1,38 +1,61 @@
-
-.actions{
+.corCard {
+    background-color: #f0f1f3; 
     padding: 20px;
-    display: flex;
-    justify-content: end;
-    flex-direction: row;
-    margin-top: 10px;
-    
-    
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
-.cardEm {
-    padding-left: 10px;
-    padding-right: 10px;
-   
+lightning-button.actions {
+    width: 100px; 
+    height: 10px;
 }
-.getEm{
-    padding-left: 10px;
-    padding-right: 10px;
-}
-.criarLC {
-    text-align: end;
-  
 
-}
+
 .itemEm {
-    border: 0.5px solid rgb(4, 0, 0);
-    border-radius: 6px;
-    padding-left: 6px;
-    padding-top: 4px;
-    padding-bottom: 4px;
+    border: 1px solid #d1d1d1; 
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px; 
+}
+.itemEm p {
+    display: flex;
+    justify-content: space-between;
+    align-items: left;
+    
+    font-size: 14px;
+    
+}
 
-} 
-.corCard{
-    background-color: #d8dadc;
-    height: 100%;
-  
+.lightning-button-menu {
+    margin-left: 10px;
+}
+.getEm {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center; 
+    gap: 20px;
+ 
+}
+
+
+.cardEm {
+    display: grid;
    
+    gap: 10px; 
+    padding: 0 20px;
+    margin-top: 10px;
+    max-height: 300px; 
+    overflow-y: auto; 
+    overflow-x: hidden;
+ 
+}
+
+.scroll-container {
+    max-height: 300px; 
+    overflow-y: auto; 
+    padding-left: 15px;
 }
