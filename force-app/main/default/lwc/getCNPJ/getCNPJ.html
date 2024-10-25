@@ -1,27 +1,27 @@
 <template>
   
-     <div class="corCard">
-       <div class="getEm">
-         <lightning-input type="text" label="Razão Social, Nome Fantasia ou CNPJ" value={input} placeholder="Digite" onchange={handleInputChange} style="text-align: center;"></lightning-input>
-         <lightning-button label="Buscar" title="Buscar" onclick={buscar} class="actions"></lightning-button>
-       </div>
-       <div class="cardEm">
-         <template for:each={result} for:item="item">
-           
-             <div class="itemEm" key={item.cnpj}>
-               <p>
-                 <strong>{item.razao_social}</strong>
-                 <lightning-button-menu alternative-text="Ações" variant="container" onselect={handleSelect} data-company={item.cnpj} >
-                   <lightning-menu-item value="MenuLead" label="Criar Lead" ></lightning-menu-item>
-                   <lightning-menu-item value="MenuConta" label="Criar Conta"></lightning-menu-item>
-                 </lightning-button-menu>
-               </p>
-               <p>{item.cnpj}</p>
-               <p>{item.municipio} - {item.uf}</p>
-             </div>
+  <div class="corCard">
+    <div class="getEm">
+      <lightning-input type="text" label="Razão Social, Nome Fantasia ou CNPJ" value={input} placeholder="Digite" onchange={handleInputChange}   onkeydown={presENT}></lightning-input>
+      <lightning-button label="Buscar" title="Buscar" onclick={buscar} class="actions"></lightning-button>
+    </div>
+    <div class="cardEm">
+      <template for:each={formattedResults} for:item="item">
         
-         </template>
-       </div>
-     </div>
-   
- </template>
+          <div class="itemEm" key={item.cnpj}>
+            <p>
+              <strong>{item.razao_social}</strong>
+              <lightning-button-menu alternative-text="Ações" variant="container" onselect={handleSelect} data-company={item.cnpj}  menu-alignment="auto">
+                <lightning-menu-item value="MenuLead" label="Criar Lead" ></lightning-menu-item>
+                <lightning-menu-item value="MenuConta" label="Criar Conta"></lightning-menu-item>
+              </lightning-button-menu>
+            </p>
+            <p>{item.formattedCNPJ}</p>
+            <p>{item.municipio} - {item.uf}</p>
+          </div>
+     
+      </template>
+    </div>
+  </div>
+
+</template>

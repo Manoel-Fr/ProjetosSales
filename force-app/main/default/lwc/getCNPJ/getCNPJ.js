@@ -14,7 +14,7 @@ import { encodeDefaultFieldValues } from "lightning/pageReferenceUtils";
       this.input = event.detail.value;
     }
   
-    async buscar() {
+    async buscar () {
   
       try {
   
@@ -22,19 +22,40 @@ import { encodeDefaultFieldValues } from "lightning/pageReferenceUtils";
           let result = await getInfo({
             pesquisa: this.input
           })
+        
           this.result = result?.content || [];      
-
-      
-  
-          console.log('resultado', this.result)
-  
         }
   
       } catch (error) {
         this.error = error;
       }
+      
   
     }
+
+    formatCNPJ(cnpj) {
+      if (!cnpj) return '';
+      
+      return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+  }
+
+  get formattedResults() {
+    return Array.isArray(this.result) ? this.result.map(item => {
+        return {
+            ...item,
+            formattedCNPJ: this.formatCNPJ(item.cnpj)
+        };
+    }) : []; 
+}
+presENT(event){
+if(event.key==='Enter'){
+  this.buscar()
+}
+
+}
+
+
+
     navigateToNewLead(Empresa) {
   
       const completo = Empresa.nome_fantasia.split(' ');

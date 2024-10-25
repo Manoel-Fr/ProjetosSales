@@ -6,7 +6,10 @@
 }
 lightning-button.actions {
     width: 100px; 
-    height: 10px;
+    height: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    
 }
 
 
@@ -20,8 +23,8 @@ lightning-button.actions {
 }
 .itemEm p {
     display: flex;
-    justify-content: space-between;
-    align-items: left;
+    justify-content:space-between;
+    align-items: center;
     
     font-size: 14px;
     
@@ -38,8 +41,15 @@ lightning-button.actions {
     display: flex;
     align-items: center; 
     gap: 20px;
- 
+    justify-content: center;
+    width: 100%;    
 }
+lightning-input {
+    flex-grow: 1;
+    padding: 10px;
+    margin-right: 5px; 
+}
+
 
 
 .cardEm {
@@ -50,7 +60,7 @@ lightning-button.actions {
     margin-top: 10px;
     max-height: 300px; 
     overflow-y: auto; 
-    overflow-x: hidden;
+    
  
 }
 
