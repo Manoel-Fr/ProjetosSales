@@ -9,6 +9,7 @@ lightning-button.actions {
     height: 20px;
     padding: 10px 20px;
     font-size: 16px;
+   
     
 }
 
@@ -42,7 +43,8 @@ lightning-button.actions {
     align-items: center; 
     gap: 20px;
     justify-content: center;
-    width: 100%;    
+    width: 100%;  
+   
 }
 lightning-input {
     flex-grow: 1;

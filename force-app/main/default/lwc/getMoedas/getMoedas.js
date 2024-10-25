@@ -22,7 +22,6 @@ export default class GetMoedas extends LightningElement {
     columns= [
         {label: 'Moeda' ,fieldName: 'code',  type:'text'},
         {label: 'Cotação' ,fieldName: 'bid',  type:'currency'},
-        {label: 'Variação', fieldName: '', type:'number'},
         {label: 'Data' ,fieldName: 'create_date',  type:'date'}
         
 
@@ -165,27 +164,6 @@ export default class GetMoedas extends LightningElement {
         this.saveCoin();
  
     };
-
-    async calcularVariavel () {
-
-        let result = await busDias()
-        let cotA = (result[0].bid)
-        let cotO = result.filter( (item) => item.bid (item.create_date - 1) )
-         
-        
-        result.forEach((item) => { 
-
-
-
-        })
-
-    }
-
-
-
-
-
-
    
     }
      

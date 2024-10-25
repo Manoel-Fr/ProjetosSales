@@ -9,29 +9,37 @@ import { encodeDefaultFieldValues } from "lightning/pageReferenceUtils";
     @track result;
     @track selectMenu;
     @track Empresa;
+    
   
     handleInputChange(event) {
+     
       this.input = event.detail.value;
+     
     }
-  
+    
     async buscar () {
-  
+    
+   
       try {
-  
+       
         if (this.input) {
+         
           let result = await getInfo({
             pesquisa: this.input
           })
         
           this.result = result?.content || [];      
         }
+     
   
       } catch (error) {
         this.error = error;
+
       }
       
   
     }
+   
 
     formatCNPJ(cnpj) {
       if (!cnpj) return '';
@@ -47,13 +55,6 @@ import { encodeDefaultFieldValues } from "lightning/pageReferenceUtils";
         };
     }) : []; 
 }
-presENT(event){
-if(event.key==='Enter'){
-  this.buscar()
-}
-
-}
-
 
 
     navigateToNewLead(Empresa) {
@@ -126,9 +127,14 @@ if(event.key==='Enter'){
         this.navigateToNewAccount(Empresa);
       }
     }
-    
 
-  
+    presENT(event){
+      if(event.key==='Enter'){
+        this.buscar()
+      }
+      
+      }
+    
     connectedCallback() {
       this.buscar();
     };

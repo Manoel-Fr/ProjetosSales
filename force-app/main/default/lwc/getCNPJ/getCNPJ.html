@@ -3,12 +3,11 @@
   <div class="corCard">
     <div class="getEm">
       <lightning-input type="text" label="Razão Social, Nome Fantasia ou CNPJ" value={input} placeholder="Digite" onchange={handleInputChange}   onkeydown={presENT}></lightning-input>
-      <lightning-button label="Buscar" title="Buscar" onclick={buscar} class="actions"></lightning-button>
+      <lightning-button label="ENTER" title="Buscar" onclick={buscar} class="actions"></lightning-button>
     </div>
     <div class="cardEm">
       <template for:each={formattedResults} for:item="item">
-        
-          <div class="itemEm" key={item.cnpj}>
+        <div class="itemEm" key={item.cnpj}>
             <p>
               <strong>{item.razao_social}</strong>
               <lightning-button-menu alternative-text="Ações" variant="container" onselect={handleSelect} data-company={item.cnpj}  menu-alignment="auto">
