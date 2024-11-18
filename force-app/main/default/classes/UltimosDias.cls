@@ -25,20 +25,21 @@ List<Object> result = (List<Object>) JSON.deserializeUntyped(res.getBody());
  
 
 @AuraEnabled
-public static  void saveQuo (List<Map<String, Object>> cotacoes )  {
+public static  void saveQuo (List<Map<String, Object>> result )  {
 
 List<Quotacao_diaria__c> quotacao = new List<Quotacao_diaria__c>();
 
- for(Map<String, Object> cotacao : cotacoes) {
+ for(Map<String,Object> res : result) {
   Quotacao_diaria__c quo = new Quotacao_diaria__c();
-  quo.Moeda__c = (String) cotacao.get('code');
-  quo.Cotacao__c = Decimal.valueOf((String) cotacao.get('bid'));
-  quo.Data__c =  Date.valueOf((String) cotacao.get('create_date'));
-  quo.ExternalId__c = (String) cotacao.get('code') + '-' + (String) cotacao.get('create_date');
+  quo.Moeda__c = (String) res.get('code');
+  quo.Cotacao__c = Decimal.valueOf((String) res.get('bid'));
+  quo.Data__c =  Date.valueOf((String) res.get('create_date'));
+  quo.ExternalId__c = (String) res.get('code') + res.get('create_date');
    quotacao.add(quo);
+   system.debug(quotacao);
  }
 
-  upsert  quotacao ExternalId__c;
+  upsert  quotacao;
 
     }
  }

@@ -124,7 +124,7 @@ export default class GetMoedas extends LightningElement {
 
  async saveCoin(){
   try{
-     await saveQuo ({cotacao : this.data});
+     await saveQuo ({result : this.data});
 
      const event = new ShowToastEvent({
         title: 'Sucesso',
@@ -134,7 +134,6 @@ export default class GetMoedas extends LightningElement {
     this.dispatchEvent(event);
 
   } catch (error){
-    console.error('Erro ao salvar cotações:', error);
     this.error = error;
   }
  }
