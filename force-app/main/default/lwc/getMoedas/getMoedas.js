@@ -20,9 +20,9 @@ export default class GetMoedas extends LightningElement {
     @api recordId;
    
     columns= [
-        {label: 'Moeda' ,fieldName: 'code',  type:'text'},
-        {label: 'Cotação' ,fieldName: 'bid',  type:'currency'},
-        {label: 'Data' ,fieldName: 'create_date',  type:'date'}
+        {label: 'Moeda' ,fieldName: 'code',  type:'text', cellAttributes: { alignment: 'center'}},
+        {label: 'Cotação' ,fieldName: 'bid',  type:'currency', cellAttributes: { alignment: 'center'}},
+        {label: 'Data' ,fieldName: 'create_date',  type:'date',  cellAttributes: { alignment: 'center'}}
         
 
     ];
@@ -83,7 +83,8 @@ export default class GetMoedas extends LightningElement {
                 createDate.setDate(createDate.getDate() - 1)
                
                 element.create_date = new Date(createDate);
-        
+
+                element.code = this.selecionarMoedas;
             });
  
 

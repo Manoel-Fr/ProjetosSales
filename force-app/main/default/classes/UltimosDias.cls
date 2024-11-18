@@ -22,8 +22,6 @@ List<Object> result = (List<Object>) JSON.deserializeUntyped(res.getBody());
    
 } 
  
- 
-
 @AuraEnabled
 public static  void saveQuo (List<Map<String, Object>> result )  {
 
@@ -36,7 +34,7 @@ List<Quotacao_diaria__c> quotacao = new List<Quotacao_diaria__c>();
   quo.Data__c =  Date.valueOf((String) res.get('create_date'));
   quo.ExternalId__c = (String) res.get('code') + res.get('create_date');
    quotacao.add(quo);
-   system.debug(quotacao);
+  
  }
 
   upsert  quotacao;
