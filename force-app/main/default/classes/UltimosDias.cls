@@ -1,7 +1,7 @@
 public with sharing class UltimosDias {
   @AuraEnabled
   public static List<Object> busDias (String moeda, Integer numeroDias) { 
-   //    moeda = moeda.toUpperCase();
+       moeda = moeda.toUpperCase();
        String url = 'https://economia.awesomeapi.com.br/json/daily/'+ moeda +'-BRL/' + numeroDias ;
 HttpRequest req = new HttpRequest();
 req.setEndpoint(url);
@@ -25,39 +25,21 @@ List<Object> result = (List<Object>) JSON.deserializeUntyped(res.getBody());
  
 
 @AuraEnabled
-public static  void saveQuo (String moeda, Decimal cotacao, Date Data)  {
+public static  void saveQuo (List<Map<String, Object>> cotacoes )  {
 
-List<Quotacao_diaria__c> quotacao = [SELECT Moeda__c, Cotacao__c,Data__c,Externald__c FROM Quotacao_diaria__c WHERE Moeda__c = :moeda];
+List<Quotacao_diaria__c> quotacao = new List<Quotacao_diaria__c>();
 
+ for(Map<String, Object> cotacao : cotacoes) {
+  Quotacao_diaria__c quo = new Quotacao_diaria__c();
+  quo.Moeda__c = (String) cotacao.get('code');
+  quo.Cotacao__c = Decimal.valueOf((String) cotacao.get('bid'));
+  quo.Data__c =  Date.valueOf((String) cotacao.get('create_date'));
+  quo.ExternalId__c = (String) cotacao.get('code') + '-' + (String) cotacao.get('create_date');
+   quotacao.add(quo);
+ }
 
+  upsert  quotacao ExternalId__c;
 
-     
-  for(Quotacao_diaria__c q : quotacao)  {
-
-     q.Data__c = Data;
-    q.Cotacao__c = cotacao;
-  }
-     
-      Quotacao_diaria__c Qnew = new Quotacao_diaria__c ();
-       
- 
-      Qnew.Moeda__c = moeda;
-      Qnew.Cotacao__c = cotacao;
-      Qnew.Data__c = Data;
-     
-
-      if(quotacao.isEmpty()){
-
-        quotacao.add(Qnew);
-      }else{
-        Qnew.Externald__c = quotacao[0].Externald__c;
-      }
-    
-      upsert quotacao ;
-      
-  }
-}
-
-
-
+    }
+ }
     

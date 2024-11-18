@@ -122,49 +122,30 @@ export default class GetMoedas extends LightningElement {
       
      }
 
+ async saveCoin(){
+  try{
+     await saveQuo ({cotacao : this.data});
 
-    async saveCoin(){
-        this.isloading = true;
+     const event = new ShowToastEvent({
+        title: 'Sucesso',
+        message: 'Cotações salvas com sucesso!',
+        variant: 'success',
+    });
+    this.dispatchEvent(event);
 
-        const his = await busDias();
+  } catch (error){
+    console.error('Erro ao salvar cotações:', error);
+    this.error = error;
+  }
+ }
 
-        const resp = await saveQuo ();
-
-        his.forEach(coin => {
-            resp.moeda = coin.code
-            resp.cotacao = coin.bid
-            resp.Data = coin.create_date
-        })
-     
-        if(resp){
-
-            this.closeAction();
-            this.showToast('salvo com sucesso!', 'success');
-        }
-        this.isloading = false;
-
-    } 
-
-    showToast(message, variant) {
-        const event = new ShowToastEvent({
-            message: message,
-            variant: variant,
-            mode: 'dismissable'
-        });
-        this.dispatchEvent(event);
-    }
-    closeAction() {
-        const closeModalEvent = new CustomEvent("modalclose");
-        this.dispatchEvent(closeModalEvent);
-    }
 
     connectedCallback () {
         this.getMoeda();
         this.getDias();
-        this.saveCoin();
+      
  
     };
-   
-    }
+} 
      
 
