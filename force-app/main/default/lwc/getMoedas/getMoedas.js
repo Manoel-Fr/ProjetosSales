@@ -7,7 +7,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 export default class GetMoedas extends LightningElement {
     @track moedas;
     @track error;
-    @track selecionarMoedas = 'BTC';
+    @track selecionarMoedas = '';
     @track valueMoeda = 0;
     @track columns; 
     @track data = [];
@@ -22,8 +22,11 @@ export default class GetMoedas extends LightningElement {
     columns= [
         {label: 'Moeda' ,fieldName: 'code',  type:'text', cellAttributes: { alignment: 'center'}},
         {label: 'Cotação' ,fieldName: 'bid',  type:'currency', cellAttributes: { alignment: 'center'}},
+      //  {label: 'Variação' ,fieldName: 'pctChange',  type:'percentage',  cellAttributes: { alignment: 'center'}},
         {label: 'Data' ,fieldName: 'create_date',  type:'date',  cellAttributes: { alignment: 'center'}}
+       
         
+   
 
     ];
 
@@ -85,8 +88,17 @@ export default class GetMoedas extends LightningElement {
                 element.create_date = new Date(createDate);
 
                 element.code = this.selecionarMoedas;
+
+
+                for(let i = element.bid; i > element.length ; i++){
+                    let vari = ((element[i] - element[i - 1]) / element[i - 1]) * 100;
+                    element.push(vari.toFixed(2));
+                        
+                         element.pctChange = (vari);
+                    }
             });
- 
+            
+          
 
  
             this.data = result; 
