@@ -18,11 +18,14 @@ export default class GetMoedas extends LightningElement {
     @track Data;
     @track cotacao;
     @api recordId;
+    @track bidHj;
+    @track bidAnt;
+    @track vari;
    
     columns= [
         {label: 'Moeda' ,fieldName: 'code',  type:'text', cellAttributes: { alignment: 'center'}},
         {label: 'Cotação' ,fieldName: 'bid',  type:'currency', cellAttributes: { alignment: 'center'}},
-      //  {label: 'Variação' ,fieldName: 'pctChange',  type:'percentage',  cellAttributes: { alignment: 'center'}},
+        {label: 'Variação' ,fieldName: 'pctChange',  type:'percent',  cellAttributes: { alignment: 'center'}},
         {label: 'Data' ,fieldName: 'create_date',  type:'date',  cellAttributes: { alignment: 'center'}}
        
         
@@ -79,6 +82,8 @@ export default class GetMoedas extends LightningElement {
         try{ 
             let result = await busDias({moeda: this.selecionarMoedas, numeroDias: this.selecionarData});
             let createDate = new Date(result[0].create_date);
+        
+
             result.forEach(element => {
                 if(element.create_date != undefined){
                     return;
@@ -89,19 +94,32 @@ export default class GetMoedas extends LightningElement {
 
                 element.code = this.selecionarMoedas;
 
+      
+                let anterior = element.filter((el,index) => {
+                    return index > 0 && el.create_date < element[index - 1].create_date;
+                } )
 
-                for(let i = element.bid; i > element.length ; i++){
-                    let vari = ((element[i] - element[i - 1]) / element[i - 1]) * 100;
-                    element.push(vari.toFixed(2));
-                        
-                         element.pctChange = (vari);
-                    }
+                let bidAnt = anterior[0].bid;
+                let bidHj = element[element.length - 1].bid
+
+                let vari = ((bidHj - bidAnt) / bidAnt) * 100;
+                 
+                  element.pctChange = vari ;
+               
+              
             });
-            
-          
 
- 
+
+     /*    for(let i = element.bid; i < element.length ; i++){
+                let vari = ((element[i].bid - element[i - 1].bid) / element[i - 1].bid) * 100;
+                    
+                     element.pctChange = (vari);
+                } */
+
+     
+           
             this.data = result; 
+            console.log(this.data);
            
             this.error = undefined;
         } catch (error) {
@@ -110,6 +128,10 @@ export default class GetMoedas extends LightningElement {
          }  this.isloading = false;
      
      }  
+
+
+
+    
 
    
 
