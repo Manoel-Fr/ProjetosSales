@@ -19,7 +19,7 @@ export default class GetMoedas extends LightningElement {
     @track cotacao;
     @api recordId;
     @track bidHj;
-    @track bidAnt;
+    @track bidOntem;
     @track vari;
    
     columns= [
@@ -28,9 +28,6 @@ export default class GetMoedas extends LightningElement {
         {label: 'Variação' ,fieldName: 'pctChange',  type:'percent',  cellAttributes: { alignment: 'center'}},
         {label: 'Data' ,fieldName: 'create_date',  type:'date',  cellAttributes: { alignment: 'center'}}
        
-        
-   
-
     ];
 
     get options() {
@@ -93,33 +90,27 @@ export default class GetMoedas extends LightningElement {
                 element.create_date = new Date(createDate);
 
                 element.code = this.selecionarMoedas;
-
-      
-                let anterior = element.filter((el,index) => {
-                    return index > 0 && el.create_date < element[index - 1].create_date;
-                } )
-
-                let bidAnt = anterior[0].bid;
-                let bidHj = element[element.length - 1].bid
-
-                let vari = ((bidHj - bidAnt) / bidAnt) * 100;
-                 
-                  element.pctChange = vari ;
-               
               
             });
 
 
-     /*    for(let i = element.bid; i < element.length ; i++){
-                let vari = ((element[i].bid - element[i - 1].bid) / element[i - 1].bid) * 100;
-                    
-                     element.pctChange = (vari);
-                } */
+    for(let i = 1; i < result.length; i++) {
 
-     
-           
+        let res = result[i]
+        let resultAnt = result[i - 1]
+   
+        res.pctChange = [];
+          
+         let bidOntem = parseFloat(resultAnt.bid)
+         let bidHj = parseFloat(res.bid)
+       
+          let vari = (bidHj - bidOntem) / bidOntem * 100
+    
+          res.pctChange = vari;
+        }
+      
+
             this.data = result; 
-            console.log(this.data);
            
             this.error = undefined;
         } catch (error) {
