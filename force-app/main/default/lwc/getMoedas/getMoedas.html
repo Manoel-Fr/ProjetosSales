@@ -1,4 +1,5 @@
 <template>
+  <div class="corCard">
     <lightning-combobox
             name="progress"
             label="Moedas"
@@ -28,12 +29,13 @@
         </p>
     </div>
     <br>
-    <div style="height: 200px;">
+    <div style="height: 200px;" class="styleTable">
         <template if:true={isloading}>
             <div class="exampleHolder">
                 <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
             </div>
         </template>
+        
         <lightning-datatable 
            if:true={data}
                 key-field="id"
@@ -41,12 +43,13 @@
                 columns={columns}
                 hide-checkbox-column>
         </lightning-datatable>
-        <lightning-button  variant="brand" label="Salvar" title="Primary action" onclick={saveCoin} class="slds-m-right_x-small"></lightning-button>
+       
     </div>
+    <lightning-button  variant="brand" label="Salvar" title="Primary action" onclick={saveCoin} class="slds-m-right_x-small"></lightning-button>
     <br>
     <br>
     <br>
-        <lightning-card title="Histórico de Pesquisa">
+       <div class="styleTable">
          <template if:true={history} >
           <lightning-datatable
                 key-field="code"
@@ -55,7 +58,7 @@
                 hide-checkbox-column>
           </lightning-datatable>
        </template>
-        </lightning-card>
-
+    </div>
+   </div>
 
 </template>

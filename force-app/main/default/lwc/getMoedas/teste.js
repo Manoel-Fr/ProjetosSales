@@ -3,14 +3,41 @@
     "code": "BTC",
     "codein": "BRL",
     "name": "Bitcoin/Real Brasileiro",
-    "high": "578000",
-    "low": "557127",
-    "varBid": "3791",
-    "pctChange": "0.67",
-    "bid": "570977",
-    "ask": "571245",
-    "timestamp": "1732285660",
-    "create_date": "2024-11-22 11:27:40"
+    "high": "576000",
+    "low": "560181",
+    "varBid": "2905",
+    "pctChange": "0.51",
+    "bid": "573777",
+    "ask": "573990",
+    "timestamp": "1732536016",
+    "create_date": "2024-11-25 09:00:16"
+  },
+  {
+    "high": "576000",
+    "low": "560181",
+    "varBid": "1092",
+    "pctChange": "0.19",
+    "bid": "572806",
+    "ask": "573005",
+    "timestamp": "1732492761"
+  },
+  {
+    "high": "577890",
+    "low": "569490",
+    "varBid": "-5728",
+    "pctChange": "-0.99",
+    "bid": "571255",
+    "ask": "571477",
+    "timestamp": "1732406339"
+  },
+  {
+    "high": "580800",
+    "low": "568000",
+    "varBid": "4438",
+    "pctChange": "0.78",
+    "bid": "577187",
+    "ask": "577386",
+    "timestamp": "1732319952"
   },
   {
     "high": "575000",
@@ -38,33 +65,6 @@
     "bid": "536924",
     "ask": "537054",
     "timestamp": "1732060768"
-  },
-  {
-    "high": "536500",
-    "low": "518000",
-    "varBid": "-2094",
-    "pctChange": "-0.4",
-    "bid": "523499",
-    "ask": "523721",
-    "timestamp": "1731974364"
-  },
-  {
-    "high": "534005",
-    "low": "519786",
-    "varBid": "-3519",
-    "pctChange": "-0.67",
-    "bid": "525686",
-    "ask": "525996",
-    "timestamp": "1731887946"
-  },
-  {
-    "high": "535000",
-    "low": "526270",
-    "varBid": "334",
-    "pctChange": "0.06",
-    "bid": "529270",
-    "ask": "529468",
-    "timestamp": "1731801548"
   }
 ]
 
@@ -83,18 +83,6 @@
  
        res.pctChange = vari;
      }
-      
-    let createDate = new Date(result[0].create_date);
-    result.forEach(element => {
-        if(element.create_date != undefined){
-            return;
-        }
-        createDate.setDate(createDate.getDate() - 1)
-       
-        element.create_date = new Date(createDate);
-           
-    });
-
  
    
 

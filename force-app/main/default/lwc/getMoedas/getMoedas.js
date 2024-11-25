@@ -7,7 +7,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 export default class GetMoedas extends LightningElement {
     @track moedas;
     @track error;
-    @track selecionarMoedas = '';
+    @track selecionarMoedas = 'BTC';
     @track valueMoeda = 0;
     @track columns; 
     @track data = [];
@@ -25,8 +25,16 @@ export default class GetMoedas extends LightningElement {
     columns= [
         {label: 'Moeda' ,fieldName: 'code',  type:'text', cellAttributes: { alignment: 'center'}},
         {label: 'Cotação' ,fieldName: 'bid',  type:'currency', cellAttributes: { alignment: 'center'}},
-        {label: 'Variação' ,fieldName: 'pctChange',  type:'percent',  cellAttributes: { alignment: 'center'}},
-        {label: 'Data' ,fieldName: 'create_date',  type:'date',  cellAttributes: { alignment: 'center'}}
+        {label: 'Variação' ,fieldName: 'pctChange',  type:'percent', cellAttributes: { alignment: 'center'}, typeAttributes: {
+            step: '0.00001',
+            minimumFractionDigits: '2',
+            maximumFractionDigits: '2',
+        },},
+        {label: 'Data' ,fieldName: 'create_date',  type:'date',  cellAttributes: { alignment: 'center'}, typeAttributes:{
+            month: "2-digit",
+            day: "2-digit",
+            year: "numeric",
+        }}
        
     ];
 
@@ -98,15 +106,15 @@ export default class GetMoedas extends LightningElement {
 
         let res = result[i]
         let resultAnt = result[i - 1]
-   
-        res.pctChange = [];
           
          let bidOntem = parseFloat(resultAnt.bid)
          let bidHj = parseFloat(res.bid)
        
-          let vari = (bidHj - bidOntem) / bidOntem * 100
+          let calculo = (bidHj - bidOntem) / bidOntem * 100
+
+          let variacao = calculo / 100
     
-          res.pctChange = vari;
+          res.pctChange = variacao;
         }
       
 
@@ -119,12 +127,6 @@ export default class GetMoedas extends LightningElement {
          }  this.isloading = false;
      
      }  
-
-
-
-    
-
-   
 
       getHistorico () {
         
