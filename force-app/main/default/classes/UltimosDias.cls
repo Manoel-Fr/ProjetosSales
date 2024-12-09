@@ -18,8 +18,7 @@ List<Object> result = (List<Object>) JSON.deserializeUntyped(res.getBody());
    return null;
 
    }
-    
-   
+     
 } 
  
 @AuraEnabled

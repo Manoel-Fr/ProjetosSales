@@ -104,17 +104,19 @@ export default class GetMoedas extends LightningElement {
 
     for(let i = 1; i < result.length; i++) {
 
-        let res = result[i]
-        let resultAnt = result[i - 1]
+        let res = result[i];
+        let resultAnt = result[i - 1];
           
-         let bidOntem = parseFloat(resultAnt.bid)
-         let bidHj = parseFloat(res.bid)
-       
-          let calculo = (bidHj - bidOntem) / bidOntem * 100
+         let bidOntem = parseFloat(resultAnt.bid);
+         let bidHj = parseFloat(res.bid);
+    
+          let calculo = (bidHj - bidOntem) / bidOntem * 100;
 
-          let variacao = calculo / 100
+          let variacao = calculo / 100;
+          
     
           res.pctChange = variacao;
+          
         }
       
 
