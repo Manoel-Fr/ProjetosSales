@@ -1,0 +1,31 @@
+.loading-container {
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.status-box {
+    background-color: #2e844a !important;
+    border-radius: 8px;
+    color: #ffffff;
+}
+
+:host {
+    display: block;
+}
+
+lightning-card {
+    transition: box-shadow 0.3s ease;
+}
+
+lightning-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.actions-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}

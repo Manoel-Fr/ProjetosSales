@@ -1,0 +1,95 @@
+<template>
+    <lightning-card title="Google Docs" icon-name="custom:custom63">
+        <template if:true={isLoading}>
+            <div class="slds-is-relative loading-container">
+                <lightning-spinner alternative-text="Carregando..." size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+            <div class="slds-p-around_medium">
+                <template if:false={isAuthorized}>
+                    <div class="slds-box slds-theme_shade slds-m-bottom_medium">
+                        <div class="slds-media">
+                            <div class="slds-media__figure">
+                                <lightning-icon icon-name="utility:warning" variant="warning" size="small"></lightning-icon>
+                            </div>
+                            <div class="slds-media__body">
+                                <p class="slds-text-body_regular">
+                                    Para usar a integração com Google Docs, você precisa autorizar o acesso à sua conta Google.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <lightning-button
+                        variant="brand"
+                        label="Conectar com Google"
+                        icon-name="utility:link"
+                        onclick={handleAuthorize}
+                        class="slds-m-right_small">
+                    </lightning-button>
+                </template>
+
+                <template if:true={isAuthorized}>
+                    <div class="slds-box slds-m-bottom_medium status-box">
+                        <div class="slds-media">
+                            <div class="slds-media__figure">
+                                <lightning-icon icon-name="utility:success" variant="inverse" size="small"></lightning-icon>
+                            </div>
+                            <div class="slds-media__body">
+                                <p class="slds-text-body_regular slds-text-color_inverse">
+                                    Conta Google conectada
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_small">
+                        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+                            <lightning-input
+                                type="text"
+                                label="Nome do signatário"
+                                value={signerName}
+                                onchange={handleSignerNameChange}>
+                            </lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+                            <lightning-input
+                                type="email"
+                                label="E-mail do signatário"
+                                required
+                                value={signerEmail}
+                                onchange={handleSignerEmailChange}>
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <div class="actions-row">
+                        <lightning-button
+                            variant="brand"
+                            label="Enviar para Autentique"
+                            icon-name="utility:send"
+                            onclick={handleSendToAutentique}
+                            disabled={isSendAutentiqueDisabled}>
+                        </lightning-button>
+
+                        <lightning-button
+                            variant="neutral"
+                            label="Abrir no Google Docs"
+                            icon-name="doctype:gdoc"
+                            onclick={handleOpenInDocs}
+                            class="slds-m-left_small">
+                        </lightning-button>
+                    </div>
+
+                    <p class="slds-text-body_small slds-text-color_weak slds-m-top_small">
+                        O sistema cria o documento, envia ao Autentique e dispara a assinatura para o e-mail informado.
+                    </p>
+                </template>
+
+            </div>
+        </template>
+
+    </lightning-card>
+</template>
