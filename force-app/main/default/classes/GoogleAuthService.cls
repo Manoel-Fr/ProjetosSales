@@ -74,7 +74,16 @@ public with sharing class GoogleAuthService {
         };
     }
 
+    // Cache do token para evitar refresh duplicado na mesma transação (ex: createDocument + export).
+    private static String cachedAccessToken;
+    private static Long cachedTokenExpiresAt;
+
     public static String refreshAccessToken() {
+        Long now = System.currentTimeMillis();
+        if (cachedAccessToken != null && cachedTokenExpiresAt != null && cachedTokenExpiresAt > now) {
+            return cachedAccessToken;
+        }
+
         Google_Credentials__c c = getCredentials();
 
         if (String.isBlank(c.Refresh_Token__c)) {
@@ -99,7 +108,22 @@ public with sharing class GoogleAuthService {
         Map<String, Object> json =
             (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
 
-        return (String) json.get('access_token');
+        cachedAccessToken = (String) json.get('access_token');
+        Object expiresInObj = json.get('expires_in');
+        Integer expiresIn = expiresInObj != null ? toInt(expiresInObj) : 3600;
+        // Buffer de 5 min antes do vencimento; mínimo 60s para tokens curtos.
+        Integer validSeconds = Math.max(expiresIn - 300, 60);
+        cachedTokenExpiresAt = now + (validSeconds * 1000L);
+
+        return cachedAccessToken;
+    }
+
+    private static Integer toInt(Object o) {
+        if (o == null) return 0;
+        if (o instanceof Integer) return (Integer) o;
+        if (o instanceof Decimal) return ((Decimal) o).intValue();
+        if (o instanceof Double) return ((Double) o).intValue();
+        return Integer.valueOf(String.valueOf(o));
     }
 
     @AuraEnabled(cacheable=true)

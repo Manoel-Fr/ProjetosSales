@@ -5,16 +5,36 @@ import getAuthorizationUrl from '@salesforce/apex/GoogleAuthService.getAuthoriza
 import createDocumentFromOpportunity from '@salesforce/apex/GoogleDocsService.createDocumentFromOpportunity';
 import sendDocumentToAutentique from '@salesforce/apex/AutentiqueService.sendDocumentToAutentique';
 
+const LOADING_MESSAGES_DOCS = [
+    'Criando documento...',
+    'Copiando modelo...',
+    'Substituindo variáveis...',
+    'Inserindo tabela de produtos...'
+];
+
+const LOADING_MESSAGES_AUTENTIQUE = [
+    'Criando documento...',
+    'Exportando para PDF...',
+    'Enviando ao Autentique...',
+    'Quase lá...'
+];
+
 export default class OportunidadeGoogleDocs extends LightningElement {
     @api recordId;
 
     isAuthorized = false;
     isLoading = true;
+    loadingMessage = 'Carregando...';
     signerName = '';
     signerEmail = '';
+    _progressInterval = null;
 
     connectedCallback() {
         this.checkAuthorization();
+    }
+
+    disconnectedCallback() {
+        this.clearProgressInterval();
     }
 
     get isSendAutentiqueDisabled() {
@@ -52,12 +72,15 @@ export default class OportunidadeGoogleDocs extends LightningElement {
 
     async handleOpenInDocs() {
         try {
-            await this.withLoading(async () => {
-                const documentUrl = await createDocumentFromOpportunity({
-                    opportunityId: this.recordId
-                });
-                this.openInNewTab(documentUrl);
-            });
+            await this.withLoading(
+                async () => {
+                    const documentUrl = await createDocumentFromOpportunity({
+                        opportunityId: this.recordId
+                    });
+                    this.openInNewTab(documentUrl);
+                },
+                LOADING_MESSAGES_DOCS
+            );
 
             this.showToast(
                 'Documento Criado!',
@@ -91,12 +114,14 @@ export default class OportunidadeGoogleDocs extends LightningElement {
 
     async handleSendToAutentique() {
         try {
-            const result = await this.withLoading(async () =>
-                sendDocumentToAutentique({
-                    opportunityId: this.recordId,
-                    signerName: this.signerName,
-                    signerEmail: this.signerEmail
-                })
+            const result = await this.withLoading(
+                () =>
+                    sendDocumentToAutentique({
+                        opportunityId: this.recordId,
+                        signerName: this.signerName,
+                        signerEmail: this.signerEmail
+                    }),
+                LOADING_MESSAGES_AUTENTIQUE
             );
 
             if (result?.signatureLink) {
@@ -116,12 +141,32 @@ export default class OportunidadeGoogleDocs extends LightningElement {
         }
     }
 
-    async withLoading(action) {
+    async withLoading(action, messages) {
         this.isLoading = true;
+        this.loadingMessage = messages?.[0] ?? 'Carregando...';
+        this.startProgressInterval(messages);
+
         try {
             return await action();
         } finally {
+            this.clearProgressInterval();
             this.isLoading = false;
+        }
+    }
+
+    startProgressInterval(messages) {
+        if (!messages || messages.length < 2) return;
+        let idx = 0;
+        this._progressInterval = setInterval(() => {
+            idx = (idx + 1) % messages.length;
+            this.loadingMessage = messages[idx];
+        }, 2500);
+    }
+
+    clearProgressInterval() {
+        if (this._progressInterval) {
+            clearInterval(this._progressInterval);
+            this._progressInterval = null;
         }
     }
 

@@ -1,8 +1,9 @@
 <template>
     <lightning-card title="Google Docs" icon-name="custom:custom63">
         <template if:true={isLoading}>
-            <div class="slds-is-relative loading-container">
-                <lightning-spinner alternative-text="Carregando..." size="medium"></lightning-spinner>
+            <div class="slds-is-relative loading-container slds-p-around_large">
+                <lightning-spinner alternative-text={loadingMessage} size="medium"></lightning-spinner>
+                <p class="slds-text-body_regular slds-m-top_small slds-text-align_center">{loadingMessage}</p>
             </div>
         </template>
 
