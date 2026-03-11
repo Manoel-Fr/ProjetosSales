@@ -1,0 +1,146 @@
+<template>
+    <template if:true={isLoading}>
+        <div class="loading-container">
+            <lightning-spinner alternative-text="Carregando veículos" size="medium"></lightning-spinner>
+            <p class="loading-texto">Buscando veículos no estoque...</p>
+        </div>
+    </template>
+
+    <template if:false={isLoading}>
+        <div class="estoque-container">
+            <div class="estoque-head">
+                <div>
+                    <p class="head-kicker">Gestão de Estoque</p>
+                    <h2 class="head-title">Veículos disponíveis</h2>
+                </div>
+                <div class="head-metrics">
+                    <span class="metric-pill">{quantidadeResultados} encontrados</span>
+                    <template if:true={termoBusca}>
+                        <span class="metric-pill metric-pill-acento">Busca ativa</span>
+                    </template>
+                </div>
+            </div>
+
+            <div class="busca-container">
+                <div class="busca-header">
+                    <lightning-icon icon-name="utility:search" size="x-small" class="busca-icon"></lightning-icon>
+                    <span class="busca-titulo">Buscar no estoque</span>
+                </div>
+                <lightning-input
+                    type="search"
+                    label="Buscar Veículo"
+                    variant="label-hidden"
+                    placeholder="Digite marca, modelo ou placa"
+                    value={termoBusca}
+                    onchange={handleBusca}
+                    aria-label="Campo de busca por marca, modelo ou placa">
+                </lightning-input>
+            </div>
+
+            <template if:true={temErro}>
+                <div class="erro-box" role="alert">
+                    <lightning-icon icon-name="utility:error" size="x-small" class="erro-icon"></lightning-icon>
+                    <span>{erro}</span>
+                </div>
+            </template>
+
+            <template if:true={temVeiculos}>
+                <div class="veiculos-grid">
+                    <lightning-layout multiple-rows>
+                        <template for:each={veiculosFiltrados} for:item="veiculo">
+                            <lightning-layout-item
+                                key={veiculo.Id}
+                                size="12"
+                                medium-device-size="6"
+                                large-device-size="4"
+                                padding="around-small">
+
+                                <article class="veiculo-card">
+                                    <div class="veiculo-imagem">
+                                        <img src={veiculo.imagemUrl} alt={veiculo.modelo} loading="lazy" />
+                                        <span class={veiculo.statusClass}>{veiculo.status}</span>
+                                    </div>
+
+                                    <div class="veiculo-info">
+                                        <h3 class="veiculo-titulo">{veiculo.marca} {veiculo.modelo}</h3>
+
+                                        <div class="info-grid-principal">
+                                            <div class="info-chip">
+                                                <lightning-icon icon-name="utility:date_input" size="xx-small"></lightning-icon>
+                                                <span>{veiculo.ano}</span>
+                                            </div>
+                                            <div class="info-chip">
+                                                <lightning-icon icon-name="utility:routing_offline" size="xx-small"></lightning-icon>
+                                                <span>{veiculo.kmFormatado}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="separador"></div>
+
+                                        <div class="info-grid-caracteristicas">
+                                            <div class="info-chip chip-detalhe">
+                                                <lightning-icon icon-name="utility:brush" size="xx-small"></lightning-icon>
+                                                <span>{veiculo.cor}</span>
+                                            </div>
+                                            <div class="info-chip chip-detalhe">
+                                                <lightning-icon icon-name="utility:priority" size="xx-small"></lightning-icon>
+                                                <span>{veiculo.combustivel}</span>
+                                            </div>
+                                            <div class="info-chip chip-detalhe">
+                                                <lightning-icon icon-name="utility:settings" size="xx-small"></lightning-icon>
+                                                <span>{veiculo.cambio}</span>
+                                            </div>
+                                            <div class="info-chip chip-detalhe">
+                                                <lightning-icon icon-name="utility:open_folder" size="xx-small"></lightning-icon>
+                                                <span>{veiculo.portas} portas</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="info-identificacao">
+                                            <div class="placa-badge">
+                                                <lightning-icon icon-name="utility:identity" size="xx-small"></lightning-icon>
+                                                <span>{veiculo.placa}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="veiculo-footer">
+                                        <span class="veiculo-preco">R$ {veiculo.precoFormatado}</span>
+                                        <lightning-button-icon
+                                            icon-name="utility:cart"
+                                            variant="brand"
+                                            size="medium"
+                                            alternative-text="Adicionar ao carrinho"
+                                            title="Adicionar ao carrinho"
+                                            onclick={handleAddCarrinho}
+                                            class="btn-carrinho"
+                                            data-id={veiculo.Id}>
+                                        </lightning-button-icon>
+                                    </div>
+                                </article>
+                            </lightning-layout-item>
+                        </template>
+                    </lightning-layout>
+                </div>
+            </template>
+
+            <template if:false={temVeiculos}>
+                <div class="estado-vazio">
+                    <div class="estado-vazio-icone">
+                        <lightning-icon icon-name="utility:search" size="large"></lightning-icon>
+                    </div>
+                    <h3 class="estado-vazio-titulo">Nenhum veículo encontrado</h3>
+                    <p class="estado-vazio-texto">Refine sua busca ou limpe os filtros para visualizar mais resultados.</p>
+                    <div class="estado-vazio-acao">
+                        <lightning-button
+                            label="Limpar filtros"
+                            variant="neutral"
+                            icon-name="utility:refresh"
+                            onclick={handleLimparFiltros}>
+                        </lightning-button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </template>
+</template>

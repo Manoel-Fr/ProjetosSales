@@ -1,0 +1,118 @@
+<template>
+    <div class="proposta-container">
+        <div class="proposta-header">
+            <div>
+                <p class="header-kicker">Fechamento da Venda</p>
+                <h2 class="header-titulo">Resumo final da proposta</h2>
+                <p class="header-subtitulo">{quantidadeItens} {textoItens} selecionados para esta negociação.</p>
+            </div>
+            <div class="header-total">
+                <span class="header-total-label">Total da proposta</span>
+                <strong class="header-total-valor">R$ {totalFinalFormatado}</strong>
+            </div>
+        </div>
+
+        <template if:true={mostrarAvisoPendencias}>
+            <div class="aviso-pendencia" role="alert">
+                <lightning-icon icon-name="utility:warning" size="x-small" class="aviso-icon"></lightning-icon>
+                <span>{mensagemPendencias}</span>
+            </div>
+        </template>
+
+        <div class="proposta-grid">
+            <section class="bloco cliente-bloco">
+                <h3 class="bloco-titulo">Cliente</h3>
+                <template if:true={temCliente}>
+                    <div class="cliente-info">
+                        <p class="cliente-nome">{nomeCliente}</p>
+                        <p>{websiteCliente}</p>
+                        <p>{segmentoCliente}</p>
+                    </div>
+                </template>
+                <template if:false={temCliente}>
+                    <p class="bloco-vazio">Nenhum cliente selecionado.</p>
+                </template>
+            </section>
+
+            <section class="bloco financeiro-bloco">
+                <h3 class="bloco-titulo">Condições</h3>
+                <div class="campo-desconto">
+                    <lightning-input
+                        type="number"
+                        label="Desconto (%)"
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        value={descontoPercentual}
+                        onchange={handleDescontoChange}>
+                    </lightning-input>
+                </div>
+                <div class="campo-observacoes">
+                    <lightning-textarea
+                        label="Observações"
+                        value={observacoes}
+                        placeholder="Informações adicionais para a proposta"
+                        onchange={handleObservacoesChange}>
+                    </lightning-textarea>
+                </div>
+            </section>
+        </div>
+
+        <section class="bloco itens-bloco">
+            <div class="itens-topo">
+                <h3 class="bloco-titulo">Itens da proposta</h3>
+                <span class="itens-quantidade">{quantidadeItens} {textoItens}</span>
+            </div>
+
+            <template if:true={temItens}>
+                <div class="itens-lista">
+                    <template for:each={itensResumo} for:item="item">
+                        <div class="item-linha" key={item.Id}>
+                            <div class="item-dados">
+                                <strong>{item.marca} {item.modelo}</strong>
+                                <span>{item.ano} | {item.kmFormatado} | {item.cor}</span>
+                            </div>
+                            <span class="item-valor">R$ {item.precoExibicao}</span>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <template if:false={temItens}>
+                <p class="bloco-vazio">Nenhum veículo adicionado ao carrinho.</p>
+            </template>
+
+            <div class="resumo-financeiro">
+                <div class="linha-resumo">
+                    <span>Subtotal</span>
+                    <span>R$ {subtotalFormatado}</span>
+                </div>
+                <div class="linha-resumo">
+                    <span>Desconto</span>
+                    <span>- R$ {descontoValorFormatado}</span>
+                </div>
+                <div class="linha-resumo linha-total">
+                    <span>Total final</span>
+                    <span>R$ {totalFinalFormatado}</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="acoes-footer">
+            <lightning-button
+                label="Cancelar"
+                variant="neutral"
+                icon-name="utility:back"
+                onclick={handleCancelar}>
+            </lightning-button>
+            <lightning-button
+                label="Finalizar Venda"
+                variant="brand"
+                icon-name="utility:check"
+                onclick={handleFinalizarVenda}
+                disabled={finalizarDesabilitado}
+                class="btn-finalizar">
+            </lightning-button>
+        </div>
+    </div>
+</template>

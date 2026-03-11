@@ -1,0 +1,83 @@
+<template>
+    <div class="clientes-container">
+        <div class="clientes-header">
+            <div>
+                <p class="header-kicker">Cadastro de Clientes</p>
+                <h2 class="header-titulo">Selecione o comprador da negociação</h2>
+            </div>
+            <span class="resultado-pill">{quantidadeClientes} resultados</span>
+        </div>
+
+        <div class="busca-container">
+            <lightning-input
+                type="search"
+                label="Buscar Cliente"
+                placeholder="Digite nome, website ou segmento"
+                value={termoBusca}
+                onchange={handleBusca}>
+            </lightning-input>
+        </div>
+
+        <template if:true={isLoading}>
+            <div class="loading-container">
+                <lightning-spinner alternative-text="Carregando clientes" size="medium"></lightning-spinner>
+                <p>Carregando clientes...</p>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+            <template if:true={temErro}>
+                <div class="erro-box" role="alert">
+                    <lightning-icon icon-name="utility:error" size="x-small" class="erro-icon"></lightning-icon>
+                    <span>{erroMensagem}</span>
+                </div>
+            </template>
+
+            <template if:true={temClientes}>
+                <div class="clientes-lista">
+                    <template for:each={clientesFiltrados} for:item="cliente">
+                        <article
+                            key={cliente.Id}
+                            class={cliente.cardClass}
+                            onclick={handleSelecionarCliente}
+                            data-id={cliente.Id}>
+                            <div class="cliente-identidade">
+                                <span class="cliente-avatar">{cliente.inicial}</span>
+                                <div class="cliente-info">
+                                    <h3 class="cliente-nome">{cliente.Name}</h3>
+                                    <p class="cliente-detalhe">
+                                        <lightning-icon icon-name="utility:world" size="xx-small"></lightning-icon>
+                                        {cliente.websiteExibicao}
+                                    </p>
+                                    <p class="cliente-detalhe">
+                                        <lightning-icon icon-name="utility:topic2" size="xx-small"></lightning-icon>
+                                        {cliente.segmentoExibicao}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="cliente-acao">
+                                <lightning-button
+                                    label="Selecionar"
+                                    variant={cliente.buttonVariant}
+                                    icon-name="utility:check"
+                                    data-id={cliente.Id}
+                                    onclick={handleSelecionarCliente}>
+                                </lightning-button>
+                            </div>
+                        </article>
+                    </template>
+                </div>
+            </template>
+
+            <template if:false={temClientes}>
+                <div class="estado-vazio">
+                    <div class="estado-vazio-icone">
+                        <lightning-icon icon-name="utility:user" size="large"></lightning-icon>
+                    </div>
+                    <h3 class="estado-vazio-titulo">Nenhum cliente encontrado</h3>
+                    <p class="estado-vazio-texto">Ajuste os termos da busca para localizar clientes cadastrados.</p>
+                </div>
+            </template>
+        </template>
+    </div>
+</template>

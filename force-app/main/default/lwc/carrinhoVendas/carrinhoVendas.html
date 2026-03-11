@@ -1,0 +1,142 @@
+<template>
+    <div class="carrinho-container">
+        <div class="carrinho-header">
+            <div class="header-principal">
+                <div class="header-icon-wrap">
+                    <lightning-icon icon-name="utility:cart" size="small" class="header-icon"></lightning-icon>
+                </div>
+                <div class="header-texto">
+                    <p class="header-kicker">Carrinho de Vendas</p>
+                    <h2 class="header-titulo">Revisão dos veículos selecionados</h2>
+                    <p class="carrinho-subtitulo">{quantidadeTexto}</p>
+                </div>
+            </div>
+
+            <div class="header-kpis">
+                <div class="kpi-card">
+                    <span class="kpi-label">Itens</span>
+                    <span class="kpi-valor">{quantidadeItens}</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-label">Total</span>
+                    <span class="kpi-valor">R$ {totalFormatado}</span>
+                </div>
+                <template if:true={clienteSelecionado}>
+                    <div class="kpi-card kpi-cliente">
+                        <span class="kpi-label">Cliente</span>
+                        <span class="kpi-valor truncado">{nomeClienteSelecionado}</span>
+                    </div>
+                </template>
+            </div>
+
+            <template if:true={temItensNoCarrinho}>
+                <lightning-button
+                    label="Limpar Carrinho"
+                    variant="destructive-text"
+                    icon-name="utility:delete"
+                    onclick={handleLimparCarrinho}
+                    class="btn-limpar">
+                </lightning-button>
+            </template>
+        </div>
+
+        <template if:true={temItensNoCarrinho}>
+            <div class="carrinho-grid">
+                <template for:each={itensCarrinho} for:item="item">
+                    <article class="item-card" key={item.Id}>
+                        <div class="item-imagem">
+                            <img src={item.imagemUrl} alt={item.modelo} loading="lazy" />
+                        </div>
+
+                        <div class="item-info">
+                            <h3 class="item-titulo">{item.marca} {item.modelo}</h3>
+                            <div class="item-detalhes">
+                                <span class="detalhe">
+                                    <lightning-icon icon-name="utility:date_input" size="xx-small"></lightning-icon>
+                                    {item.ano}
+                                </span>
+                                <span class="detalhe">
+                                    <lightning-icon icon-name="utility:routing_offline" size="xx-small"></lightning-icon>
+                                    {item.kmFormatado}
+                                </span>
+                                <span class="detalhe">
+                                    <lightning-icon icon-name="utility:brush" size="xx-small"></lightning-icon>
+                                    {item.cor}
+                                </span>
+                            </div>
+
+                            <div class="info-financeira">
+                                <div class="financeiro-linha custo">
+                                    <span class="financeiro-label">Custo</span>
+                                    <span class="financeiro-valor">R$ {item.custoFormatado}</span>
+                                </div>
+                                <div class="financeiro-linha venda">
+                                    <span class="financeiro-label">Venda</span>
+                                    <span class="financeiro-valor">R$ {item.precoFormatado}</span>
+                                </div>
+                                <div class="financeiro-linha lucro">
+                                    <span class="financeiro-label">Lucro</span>
+                                    <span class="financeiro-valor">R$ {item.lucroFormatado}</span>
+                                </div>
+                                <div class="financeiro-linha comissao">
+                                    <span class="financeiro-label">Comissão</span>
+                                    <span class="financeiro-valor"> {item.comissao}%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="item-footer">
+                            <span class="item-preco-destaque">R$ {item.precoFormatado}</span>
+                            <lightning-button-icon
+                                icon-name="utility:delete"
+                                variant="border-filled"
+                                size="small"
+                                alternative-text="Remover do carrinho"
+                                title="Remover"
+                                onclick={handleRemoverItem}
+                                class="btn-remover"
+                                data-id={item.Id}>
+                            </lightning-button-icon>
+                        </div>
+                    </article>
+                </template>
+            </div>
+
+            <div class="carrinho-resumo">
+                <div class="resumo-linha">
+                    <span>Subtotal ({quantidadeItens} {textoItens})</span>
+                    <span>R$ {subtotalFormatado}</span> 
+                </div>
+                <div class="resumo-linha">
+                    <span> Valor Comissão: </span>
+                    <span>R$ {comissaoFormatado}</span>
+                </div>
+                <div class="resumo-linha total">
+                    <span>Total</span>
+                    <span>R$ {totalFormatado}</span>
+                </div>
+            </div>
+
+            <div class="carrinho-acoes">
+                <lightning-button
+                    label="Continuar para Proposta"
+                    variant="brand"
+                    icon-name="utility:forward"
+                    icon-position="right"
+                    onclick={handleFinalizar}
+                    class="btn-finalizar">
+                </lightning-button>
+            </div>
+        </template>
+
+        <template if:false={temItensNoCarrinho}>
+            <div class="carrinho-vazio">
+                <div class="vazio-icon-wrap">
+                    <lightning-icon icon-name="utility:cart" size="large"></lightning-icon>
+                </div>
+                <h3>Seu carrinho está vazio</h3>
+                <p>Adicione veículos no estoque para montar uma proposta completa.</p>
+            </div>
+        </template>
+    </div>
+</template>

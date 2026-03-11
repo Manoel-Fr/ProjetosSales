@@ -1,0 +1,211 @@
+<template>
+    <div class="workspace-shell">
+        <div class="header-principal">
+            <div class="header-conteudo">
+                <div class="header-titulo">
+                    <span class="kicker">Pipeline Comercial</span>
+                    <h1 class="titulo-principal">
+                        <lightning-icon
+                            icon-name=""
+                            size="small"
+                            class="icone-titulo">
+                        </lightning-icon>
+                        SalesCar
+                    </h1>
+                    <p class="subtitulo">{titulo}</p>
+                </div>
+
+                <div class="stats-container">
+                    <div class="stat-card stat-cliente">
+                        <lightning-icon
+                            icon-name="utility:user"
+                            size="x-small"
+                            class="stat-icon">
+                        </lightning-icon>
+                        <div class="stat-info">
+                            <span class="stat-numero stat-numero-texto">{nomeClienteSelecionado}</span>
+                            <span class="stat-label">Cliente</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card stat-carrinho">
+                        <lightning-icon
+                            icon-name="utility:cart"
+                            size="x-small"
+                            class="stat-icon">
+                        </lightning-icon>
+                        <div class="stat-info">
+                            <span class="stat-numero">{quantidadeCarrinho}</span>
+                            <span class="stat-label">Itens no carrinho</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card stat-total">
+                        <lightning-icon
+                            icon-name="utility:moneybag"
+                            size="x-small"
+                            class="stat-icon">
+                        </lightning-icon>
+                        <div class="stat-info">
+                            <span class="stat-numero">R$ {totalCarrinho}</span>
+                            <span class="stat-label">Valor total</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="workflow-progress">
+                <div class="workflow-info">
+                    <span class="workflow-etapa">Etapa {etapaAtualNumero} de 4</span>
+                    <span class="workflow-label">{activeTabLabel}</span>
+                </div>
+                <div class="workflow-track">
+                    <span class="workflow-fill" style={progressoStyle}></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="navegacao-moderna">
+            <div class="nav-cards-container">
+                <div
+                    class={estoqueCardClass}
+                    onclick={handleNavigateEstoque}
+                    onkeydown={handleNavigateEstoque}
+                    role="button"
+                    tabindex="0">
+                    <span class="card-step">1</span>
+                    <div class="card-icone-wrapper card-estoque">
+                        <lightning-icon
+                            icon-name="standard:asset_object"
+                            size="small"
+                            class="card-icone">
+                        </lightning-icon>
+                    </div>
+                    <div class="card-info">
+                        <h2 class="card-titulo">Estoque</h2>
+                        <p class="card-descricao">Escolha os veículos da negociação</p>
+                    </div>
+                    <div class="card-badge-wrapper">
+                        <span class="card-seta">→</span>
+                    </div>
+                </div>
+
+                <div
+                    class={clientesCardClass}
+                    onclick={handleNavigateClientes}
+                    onkeydown={handleNavigateClientes}
+                    role="button"
+                    tabindex="0">
+                    <span class="card-step">2</span>
+                    <div class="card-icone-wrapper card-clientes">
+                        <lightning-icon
+                            icon-name="standard:contact"
+                            size="small"
+                            class="card-icone">
+                        </lightning-icon>
+                    </div>
+                    <div class="card-info">
+                        <h2 class="card-titulo">Clientes</h2>
+                        <p class="card-descricao">Defina o comprador desta venda</p>
+                    </div>
+                    <div class="card-badge-wrapper">
+                        <span class="card-seta">→</span>
+                    </div>
+                </div>
+
+                <div
+                    class={carrinhoCardClass}
+                    onclick={handleNavigateCarrinho}
+                    onkeydown={handleNavigateCarrinho}
+                    role="button"
+                    tabindex="0">
+                    <span class="card-step">3</span>
+                    <div class="card-icone-wrapper card-carrinho">
+                        <lightning-icon
+                            icon-name="standard:cart"
+                            size="small"
+                            class="card-icone">
+                        </lightning-icon>
+                        <template if:true={temItensCarrinho}>
+                            <span class="badge-quantidade">{quantidadeCarrinho}</span>
+                        </template>
+                    </div>
+                    <div class="card-info">
+                        <h2 class="card-titulo">Carrinho</h2>
+                        <p class="card-descricao">Revise valores e itens selecionados</p>
+                    </div>
+                    <div class="card-badge-wrapper">
+                        <span class="card-seta">→</span>
+                    </div>
+                </div>
+
+                <div
+                    class={propostaCardClass}
+                    onclick={handleNavigateProposta}
+                    onkeydown={handleNavigateProposta}
+                    role="button"
+                    tabindex="0">
+                    <span class="card-step">4</span>
+                    <div class="card-icone-wrapper card-proposta">
+                        <lightning-icon
+                            icon-name="standard:contract"
+                            size="small"
+                            class="card-icone">
+                        </lightning-icon>
+                    </div>
+                    <div class="card-info">
+                        <h2 class="card-titulo">Proposta</h2>
+                        <p class="card-descricao">Conclua a proposta e finalize</p>
+                    </div>
+                    <div class="card-badge-wrapper">
+                        <span class="card-seta">→</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="conteudo-shell">
+            <div class="conteudo-headline">
+                <lightning-icon
+                    icon-name="utility:record"
+                    size="xx-small"
+                    class="conteudo-headline-icon">
+                </lightning-icon>
+                <span>{activeTabLabel}</span>
+            </div>
+
+            <div class="conteudo-aba">
+                <template if:true={isEstoqueAtivo}>
+                    <c-estoque-veiculos
+                        onaddcarrinho={handleAddCarrinho}>
+                    </c-estoque-veiculos>
+                </template>
+
+                <template if:true={isCarrinhoAtivo}>
+                    <c-carrinho-vendas
+                        itens-carrinho={itensCarrinho}
+                        cliente-selecionado={clienteSelecionado}
+                        onfinalizar={handleFinalizar}
+                        onremoveritem={handleRemoverItem}
+                        onlimparcarrinho={handleLimparTodoCarrinho}>
+                    </c-carrinho-vendas>
+                </template>
+
+                <template if:true={isClientesAtivo}>
+                    <c-clientes-vendas
+                        onselecionarcliente={handleSelecionarCliente}>
+                    </c-clientes-vendas>
+                </template>
+
+                <template if:true={isPropostaAtivo}>
+                    <c-proposta-vendas
+                        cliente-selecionado={clienteSelecionado}
+                        itens-carrinho={itensCarrinho}
+                        oncancelar={handleCancelarProposta}
+                        onfinalizarvenda={handleFinalizarVenda}>
+                    </c-proposta-vendas>
+                </template>
+            </div>
+        </div>
+    </div>
+</template>
