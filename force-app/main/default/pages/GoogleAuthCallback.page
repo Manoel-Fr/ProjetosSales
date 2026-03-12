@@ -1,0 +1,93 @@
+<apex:page controller="GoogleAuthCallbackController" action="{!processCallback}" showHeader="false" sidebar="false">
+    <html>
+        <head>
+            <title>Autenticação Google</title>
+            <style>
+                body {
+                    font-family: 'Salesforce Sans', Arial, sans-serif;
+                    background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+                    min-height: 100vh;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    margin: 0;
+                    padding: 20px;
+                    box-sizing: border-box;
+                }
+                .container {
+                    background: white;
+                    border-radius: 12px;
+                    padding: 40px;
+                    max-width: 500px;
+                    width: 100%;
+                    text-align: center;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                }
+                .icon {
+                    font-size: 60px;
+                    margin-bottom: 20px;
+                }
+                h1 {
+                    color: #333;
+                    margin-bottom: 15px;
+                    font-size: 24px;
+                }
+                p {
+                    color: #666;
+                    line-height: 1.6;
+                    margin-bottom: 25px;
+                }
+                .error-box {
+                    color: #c00;
+                    background: #fef1f1;
+                    border: 1px solid #f5c6c6;
+                    padding: 15px;
+                    border-radius: 6px;
+                    margin-bottom: 20px;
+                    text-align: left;
+                }
+                .btn {
+                    display: inline-block;
+                    padding: 12px 30px;
+                    background: #000000;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 6px;
+                    font-weight: bold;
+                    transition: background 0.3s;
+                }
+                .btn:hover {
+                    background: #333;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <apex:outputPanel rendered="{!isSuccess}">
+                    <div class="icon">✅</div>
+                    <h1>Conta Google conectada!</h1>
+                    <p>Sua conta foi autorizada com sucesso. Você já pode fechar esta janela e usar a integração com Google Docs.</p>
+                    <!-- <apex:outputPanel rendered="{!NOT(ISBLANK(opportunityId))}">
+                        <a class="btn" href="/{!opportunityId}">Voltar para a Oportunidade</a>
+                    </apex:outputPanel> -->
+                    <apex:outputPanel rendered="{!NOT(ISBLANK(opportunityId))}">
+                        <a class="btn" href="javascript:window.close()">Fechar esta janela</a>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+
+                <apex:outputPanel rendered="{!NOT(isSuccess)}">
+                    <div class="icon">❌</div>
+                    <h1>Falha na autenticação</h1>
+                    <apex:outputPanel rendered="{!NOT(ISBLANK(errorMessage))}">
+                        <div class="error-box">
+                            <apex:outputText value="{!errorMessage}" escape="true" />
+                        </div>
+                    </apex:outputPanel>
+                    <p>Feche esta janela e tente conectar novamente clicando em <strong>Conectar com Google</strong>.</p>
+                    <a class="btn" href="javascript:window.close()">Fechar esta janela</a>
+                </apex:outputPanel>
+            </div>
+        </body>
+        <apex:page reflesh="true" />
+    </html>
+</apex:page>

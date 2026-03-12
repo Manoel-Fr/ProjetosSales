@@ -1,12 +1,11 @@
 /**
  * Serviço de operações com Google Docs e Google Drive.
- * Cria documentos a partir de oportunidades e exporta para HTML.
+ * Cria documentos a partir de oportunidades e exporta para HTML/PDF.
  */
 public with sharing class GoogleDocsService {
 
     private static final String GOOGLE_DOCS_API  = 'https://docs.googleapis.com/v1/documents';
     private static final String GOOGLE_DRIVE_API = 'https://www.googleapis.com/drive/v3/files';
-    private static final String PRODUCT_LIST_KEY = 'LISTA_PRODUTOS';
     private static final String PRODUCT_PLACEHOLDER = '{{LISTA_PRODUTOS}}';
     private static final Integer PRODUCT_TABLE_COLS = 5;
 
@@ -54,7 +53,7 @@ public with sharing class GoogleDocsService {
             ORDER BY CreatedDate
         ];
 
-        Map<String, String> variaveis = buildReplacementMap(opp, productItems);
+        Map<String, String> variaveis = buildReplacementMap(opp);
         replaceVariablesInDocument(accessToken, docId, variaveis, productItems);
 
         return 'https://docs.google.com/document/d/' + docId + '/edit';
@@ -107,29 +106,20 @@ public with sharing class GoogleDocsService {
         String endpoint =
             GOOGLE_DRIVE_API + '/' + documentId +
             '/export?mimeType=' + EncodingUtil.urlEncode(mimeType, 'UTF-8');
-        HttpResponse res = sendRequest(endpoint, 'GET', accessToken, null, null);
+        HttpResponse res = GoogleApiClient.sendRequest(endpoint, 'GET', accessToken, null, null);
         return res.getBodyAsBlob();
     }
 
     private static String copyTemplateDocument(String token, String templateFileId, String newDocumentName) {
         String body = JSON.serialize(new Map<String, Object>{ 'name' => newDocumentName });
         String url = GOOGLE_DRIVE_API + '/' + templateFileId + '/copy?supportsAllDrives=true';
-        HttpResponse res = sendRequest(
-            url,
-            'POST',
-            token,
-            'application/json',
-            body
-        );
-
+        HttpResponse res = GoogleApiClient.sendRequest(url, 'POST', token, 'application/json', body);
         Map<String, Object> json = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
         return (String) json.get('id');
     }
 
-    private static Map<String, String> buildReplacementMap(Opportunity opp, List<OpportunityLineItem> items) {
+    private static Map<String, String> buildReplacementMap(Opportunity opp) {
         Map<String, String> m = new Map<String, String>();
-        m.put(PRODUCT_LIST_KEY, buildProductList(items));
-
         m.put('NOME_OPORTUNIDADE', val(opp.Name));
         m.put('VALOR', money(opp.Amount));
         m.put('VALOR_MENSAL', money(opp.Amount));
@@ -139,7 +129,10 @@ public with sharing class GoogleDocsService {
         m.put('DESCRICAO', val(opp.Description));
         m.put('RAZAO_SOCIAL', val(opp.Account.Name != null ? opp.Account.Name : ''));
         m.put('ENDERECO', val(opp.Account.BillingStreet != null ? opp.Account.BillingStreet : ''));
-        m.put('CIDADE_UF', val(opp.Account.BillingCity != null ? opp.Account.BillingCity : '') + (String.isNotBlank(opp.Account.BillingState) ? '/' + opp.Account.BillingState : ''));
+        m.put('CIDADE_UF',
+            val(opp.Account.BillingCity != null ? opp.Account.BillingCity : '') +
+            (String.isNotBlank(opp.Account.BillingState) ? '/' + opp.Account.BillingState : '')
+        );
         m.put('CEP', val(opp.Account.BillingPostalCode != null ? opp.Account.BillingPostalCode : ''));
         m.put('NUMERO', '');
         m.put('BAIRRO', '');
@@ -149,33 +142,10 @@ public with sharing class GoogleDocsService {
         return m;
     }
 
-    private static String buildProductList(List<OpportunityLineItem> items) {
-        if (items == null || items.isEmpty()) {
-            return 'Nenhum produto.';
-        }
-
-        String texto = '';
-        Integer i = 1;
-
-        for (OpportunityLineItem item : items) {
-            texto +=
-                'ITEM ' + i + ' - ' +
-                val(item.PricebookEntry.Name) + '\n' +
-                'Qtd: ' + String.valueOf(item.Quantity) + '\n' +
-                'Valor Unitário: ' + money(item.UnitPrice) + '\n' +
-                'Total: ' + money(item.TotalPrice) + '\n\n';
-
-            i++;
-        }
-
-        return texto;
-    }
-
     private static void replaceVariablesInDocument(String token, String docId, Map<String, String> variaveis, List<OpportunityLineItem> productItems) {
         List<Map<String, Object>> requests = new List<Map<String, Object>>();
 
         for (String nomeVar : variaveis.keySet()) {
-            if (nomeVar == PRODUCT_LIST_KEY) continue;
             String placeholder = '{{' + nomeVar + '}}';
             String valor = variaveis.get(nomeVar) != null ? variaveis.get(nomeVar) : '';
 
@@ -263,77 +233,62 @@ public with sharing class GoogleDocsService {
     }
 
     private static Map<String, Object> getDocument(String token, String docId) {
-        HttpResponse res = sendRequest(GOOGLE_DOCS_API + '/' + docId, 'GET', token, null, null);
+        HttpResponse res = GoogleApiClient.sendRequest(GOOGLE_DOCS_API + '/' + docId, 'GET', token, null, null);
         return (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
     }
 
+    // Procura {{LISTA_PRODUTOS}} no documento e retorna [inicio, fim] do texto encontrado.
+    // Retorna null se o placeholder não existir no template.
     private static List<Integer> findPlaceholderRange(Map<String, Object> body, String placeholder) {
-        List<Object> content = (List<Object>) body.get('content');
-        if (content == null) return null;
-        for (Object el : content) {
+        for (Object el : docList(body, 'content')) {
             Map<String, Object> elem = (Map<String, Object>) el;
             if (!elem.containsKey('paragraph')) continue;
-            Map<String, Object> para = (Map<String, Object>) elem.get('paragraph');
-            List<Object> elements = (List<Object>) para.get('elements');
-            if (elements == null) continue;
-            for (Object pe : elements) {
+
+            for (Object pe : docList((Map<String, Object>) elem.get('paragraph'), 'elements')) {
                 Map<String, Object> peMap = (Map<String, Object>) pe;
                 if (!peMap.containsKey('textRun')) continue;
-                Map<String, Object> textRun = (Map<String, Object>) peMap.get('textRun');
-                String contentStr = (String) textRun.get('content');
-                if (contentStr == null || !contentStr.contains(placeholder)) continue;
-                Integer elemStart = toInt(peMap.get('startIndex'));
-                if (elemStart == null) continue;
-                Integer offset = contentStr.indexOf(placeholder);
-                Integer start = elemStart + offset;
-                Integer endIdx = start + placeholder.length();
-                return new List<Integer>{ start, endIdx };
+
+                String text = (String) ((Map<String, Object>) peMap.get('textRun')).get('content');
+                if (text == null || !text.contains(placeholder)) continue;
+
+                Integer start = GoogleApiClient.toInt(peMap.get('startIndex'));
+                if (start == null) continue;
+
+                Integer offset = text.indexOf(placeholder);
+                return new List<Integer>{ start + offset, start + offset + placeholder.length() };
             }
         }
         return null;
     }
 
+    // Retorna o índice do último caractere do documento.
+    // Usado como posição de inserção quando {{LISTA_PRODUTOS}} não existe no template.
     private static Integer getBodyEndIndex(Map<String, Object> body) {
-        List<Object> content = (List<Object>) body.get('content');
-        if (content == null || content.isEmpty()) return 1;
         Integer maxEnd = 1;
-        for (Object el : content) {
-            Map<String, Object> elem = (Map<String, Object>) el;
-            Integer endIdx = toInt(elem.get('endIndex'));
+        for (Object el : docList(body, 'content')) {
+            Integer endIdx = GoogleApiClient.toInt(((Map<String, Object>) el).get('endIndex'));
             if (endIdx != null && endIdx > maxEnd) maxEnd = endIdx;
         }
         return maxEnd;
     }
 
+    // Após inserir a tabela vazia, percorre as células e coleta o startIndex de cada uma.
+    // Esses índices são usados para preencher as células com texto depois.
     private static List<Integer> collectTableCellIndices(Map<String, Object> doc, Integer tableStartIndex) {
         List<Integer> indices = new List<Integer>();
         Map<String, Object> body = (Map<String, Object>) doc.get('body');
         if (body == null) return indices;
-        List<Object> content = (List<Object>) body.get('content');
-        if (content == null) return indices;
-        for (Object el : content) {
+
+        for (Object el : docList(body, 'content')) {
             Map<String, Object> elem = (Map<String, Object>) el;
             if (!elem.containsKey('table')) continue;
-            Integer elemStart = toInt(elem.get('startIndex'));
+
+            Integer elemStart = GoogleApiClient.toInt(elem.get('startIndex'));
             if (elemStart == null || (elemStart != tableStartIndex && elemStart != tableStartIndex + 1)) continue;
-            Map<String, Object> table = (Map<String, Object>) elem.get('table');
-            List<Object> tableRows = (List<Object>) table.get('tableRows');
-            if (tableRows == null) break;
-            for (Object rowObj : tableRows) {
-                Map<String, Object> row = (Map<String, Object>) rowObj;
-                List<Object> cells = (List<Object>) row.get('tableCells');
-                if (cells == null) continue;
-                for (Object cellObj : cells) {
-                    Map<String, Object> cell = (Map<String, Object>) cellObj;
-                    List<Object> cellContent = (List<Object>) cell.get('content');
-                    if (cellContent == null || cellContent.isEmpty()) continue;
-                    Map<String, Object> first = (Map<String, Object>) cellContent[0];
-                    if (!first.containsKey('paragraph')) continue;
-                    Map<String, Object> para = (Map<String, Object>) first.get('paragraph');
-                    List<Object> paraElements = (List<Object>) para.get('elements');
-                    if (paraElements == null || paraElements.isEmpty()) continue;
-                    Map<String, Object> firstParaEl = (Map<String, Object>) paraElements[0];
-                    Integer idx = toInt(firstParaEl.get('startIndex'));
+
+            for (Object rowObj : docList((Map<String, Object>) elem.get('table'), 'tableRows')) {
+                for (Object cellObj : docList((Map<String, Object>) rowObj, 'tableCells')) {
+                    Integer idx = cellFirstElementIndex((Map<String, Object>) cellObj);
                     if (idx != null) indices.add(idx);
                 }
             }
@@ -342,45 +297,33 @@ public with sharing class GoogleDocsService {
         return indices;
     }
 
-    private static Integer toInt(Object o) {
-        if (o == null) return null;
-        if (o instanceof Integer) return (Integer) o;
-        if (o instanceof Decimal) return ((Decimal) o).intValue();
-        if (o instanceof Double) return ((Double) o).intValue();
-        return Integer.valueOf(String.valueOf(o));
+    // Retorna o startIndex do primeiro elemento de texto dentro de uma célula da tabela.
+    private static Integer cellFirstElementIndex(Map<String, Object> cell) {
+        List<Object> cellContent = docList(cell, 'content');
+        if (cellContent.isEmpty()) return null;
+        Map<String, Object> firstBlock = (Map<String, Object>) cellContent[0];
+        if (!firstBlock.containsKey('paragraph')) return null;
+        List<Object> elements = docList((Map<String, Object>) firstBlock.get('paragraph'), 'elements');
+        if (elements.isEmpty()) return null;
+        return GoogleApiClient.toInt(((Map<String, Object>) elements[0]).get('startIndex'));
+    }
+
+    // Atalho seguro para pegar uma lista de qualquer nó do documento sem risco de NullPointerException.
+    private static List<Object> docList(Map<String, Object> node, String key) {
+        if (node == null) return new List<Object>();
+        Object v = node.get(key);
+        return v != null ? (List<Object>) v : new List<Object>();
     }
 
     private static void sendBatchUpdate(String token, String docId, List<Map<String, Object>> requests) {
         if (requests == null || requests.isEmpty()) return;
-        sendRequest(
+        GoogleApiClient.sendRequest(
             GOOGLE_DOCS_API + '/' + docId + ':batchUpdate',
             'POST',
             token,
             'application/json',
             JSON.serialize(new Map<String, Object>{ 'requests' => requests })
         );
-    }
-
-    private static HttpResponse sendRequest(
-        String endpoint,
-        String method,
-        String token,
-        String contentType,
-        String body
-    ) {
-        HttpRequest req = new HttpRequest();
-        req.setEndpoint(endpoint);
-        req.setMethod(method);
-        if (token != null) req.setHeader('Authorization', 'Bearer ' + token);
-        if (contentType != null) req.setHeader('Content-Type', contentType);
-        if (body != null) req.setBody(body);
-
-        HttpResponse res = new Http().send(req);
-
-        if (res.getStatusCode() < 200 || res.getStatusCode() >= 300) {
-            throw new GoogleDocsException(res.getBody());
-        }
-        return res;
     }
 
     private static String money(Decimal d) {

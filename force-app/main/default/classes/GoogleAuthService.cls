@@ -53,7 +53,7 @@ public with sharing class GoogleAuthService {
             'grant_type'    => 'authorization_code'
         });
 
-        HttpResponse res = sendRequest(
+        HttpResponse res = GoogleApiClient.sendRequest(
             GOOGLE_TOKEN_URL,
             'POST',
             null,
@@ -97,7 +97,7 @@ public with sharing class GoogleAuthService {
             'grant_type'    => 'refresh_token'
         });
 
-        HttpResponse res = sendRequest(
+        HttpResponse res = GoogleApiClient.sendRequest(
             GOOGLE_TOKEN_URL,
             'POST',
             null,
@@ -110,20 +110,12 @@ public with sharing class GoogleAuthService {
 
         cachedAccessToken = (String) json.get('access_token');
         Object expiresInObj = json.get('expires_in');
-        Integer expiresIn = expiresInObj != null ? toInt(expiresInObj) : 3600;
+        Integer expiresIn = expiresInObj != null ? GoogleApiClient.toInt(expiresInObj) : 3600;
         // Buffer de 5 min antes do vencimento; mínimo 60s para tokens curtos.
         Integer validSeconds = Math.max(expiresIn - 300, 60);
         cachedTokenExpiresAt = now + (validSeconds * 1000L);
 
         return cachedAccessToken;
-    }
-
-    private static Integer toInt(Object o) {
-        if (o == null) return 0;
-        if (o instanceof Integer) return (Integer) o;
-        if (o instanceof Decimal) return ((Decimal) o).intValue();
-        if (o instanceof Double) return ((Double) o).intValue();
-        return Integer.valueOf(String.valueOf(o));
     }
 
     @AuraEnabled(cacheable=true)
@@ -136,28 +128,6 @@ public with sharing class GoogleAuthService {
         Google_Credentials__c c = Google_Credentials__c.getOrgDefaults();
         c.Refresh_Token__c = token;
         upsert c;
-    }
-
-    private static HttpResponse sendRequest(
-        String endpoint,
-        String method,
-        String token,
-        String contentType,
-        String body
-    ) {
-        HttpRequest req = new HttpRequest();
-        req.setEndpoint(endpoint);
-        req.setMethod(method);
-        if (token != null) req.setHeader('Authorization', 'Bearer ' + token);
-        if (contentType != null) req.setHeader('Content-Type', contentType);
-        if (body != null) req.setBody(body);
-
-        HttpResponse res = new Http().send(req);
-
-        if (res.getStatusCode() < 200 || res.getStatusCode() >= 300) {
-            throw new GoogleDocsException(res.getBody());
-        }
-        return res;
     }
 
     private static String buildQueryString(Map<String, String> p) {

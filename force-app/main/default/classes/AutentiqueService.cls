@@ -25,40 +25,24 @@ public with sharing class AutentiqueService {
             throw new GoogleDocsException('Informe um e-mail válido para o signatário.');
         }
 
+        Opportunity opp = [SELECT Name, Account.Name FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
+        String documentName = String.isNotBlank(opp.Account?.Name)
+            ? 'Contrato - ' + opp.Account.Name + ' - ' + opp.Name
+            : 'Contrato - ' + opp.Name;
+
+        String accessToken = GoogleAuthService.refreshAccessToken();
         String googleDocUrl = GoogleDocsService.createDocumentFromOpportunity(opportunityId);
         String docId = GoogleDocsService.extractDocumentIdFromUrl(googleDocUrl);
-        String accessToken = GoogleAuthService.refreshAccessToken();
         AutentiqueFilePayload filePayload = buildAutentiqueFilePayload(accessToken, docId);
 
-        String documentName = buildAutentiqueDocumentName(opportunityId);
         AutentiqueApiConfig cfg = getAutentiqueApiConfig();
-        AutentiqueSendResult result = createAutentiqueDocument(
-            cfg,
-            filePayload,
-            documentName,
-            signerName,
-            signerEmail
-        );
+        AutentiqueSendResult result = createAutentiqueDocument(cfg, filePayload, documentName, signerName, signerEmail);
 
         result.googleDocUrl = googleDocUrl;
         if (String.isBlank(result.message)) {
             result.message = 'Documento enviado ao Autentique com sucesso.';
         }
         return result;
-    }
-
-    private static String buildAutentiqueDocumentName(String opportunityId) {
-        Opportunity opp = [
-            SELECT Name, Account.Name
-            FROM Opportunity
-            WHERE Id = :opportunityId
-            LIMIT 1
-        ];
-        String accountName = opp.Account != null ? opp.Account.Name : '';
-        if (String.isBlank(accountName)) {
-            return 'Contrato - ' + opp.Name;
-        }
-        return 'Contrato - ' + accountName + ' - ' + opp.Name;
     }
 
     private static AutentiqueFilePayload buildAutentiqueFilePayload(String accessToken, String documentId) {

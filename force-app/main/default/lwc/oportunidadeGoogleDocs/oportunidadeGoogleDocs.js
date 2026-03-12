@@ -124,11 +124,11 @@ export default class OportunidadeGoogleDocs extends LightningElement {
                 LOADING_MESSAGES_AUTENTIQUE
             );
 
-            if (result?.signatureLink) {
-                this.openInNewTab(result.signatureLink);
-            } else if (result?.googleDocUrl) {
-                this.openInNewTab(result.googleDocUrl);
-            }
+            // if (result?.signatureLink) {
+            //     this.openInNewTab(result.signatureLink);
+            // } else if (result?.googleDocUrl) {
+            //     this.openInNewTab(result.googleDocUrl);
+            // }
 
             this.showToast(
                 'Enviado ao Autentique',
