@@ -1,0 +1,205 @@
+<template>
+    <lightning-card>
+        <!-- Header customizado -->
+        <div class="card-header" slot="title">
+            <div class="card-header-inner">
+                <div class="card-header-icon">
+                    <lightning-icon icon-name="utility:attach" size="small" variant="inverse"></lightning-icon>
+                </div>
+                <div>
+                    <span class="card-header-title">Gerenciar Documentos</span>
+                    <span class="card-header-subtitle">Gerencie os anexos vinculados a este registro</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-cards-container">
+            <template for:each={categoriasNav} for:item="categoria">
+                <div key={categoria.key} class={categoria.navCardClass} data-categoria={categoria.value} onclick={handleNavCardClick} role="button" tabindex="0">
+                    <div class="nav-card-icon">
+                        <lightning-icon icon-name="utility:attach" size="small" variant="inverse"></lightning-icon>
+                    </div>
+                    <div class="nav-card-content">
+                        <h3 class="nav-card-title">{categoria.label}</h3>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <div class="main-container">
+
+            <!-- Tabela de arquivos -->
+            <div class="table-wrapper">
+                <template if:true={files}>
+                    <template if:true={filesFiltrados.length}>
+                        <table class="doc-table">
+                            <thead>
+                                <tr>
+                                    <th class="col-icon"></th>
+                                    <th class="col-title">Título</th>
+                                    <th class="col-categoria">Categoria</th>
+                                    <th class="col-tipo">Tipo</th>
+                                    <th class="col-tamanho">Tamanho</th>
+                                    <th class="col-data">Adicionado em</th>
+                                    <th class="col-acoes">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={filesFiltrados} for:item="file">
+                                    <tr key={file.Id} class="doc-row">
+                                        <td class="col-icon">
+                                            <template if:true={file.isImage}>
+                                                <template if:true={file.previewUrl}>
+                                                    <a href={file.previewUrl} onclick={handleLinkClick} class="thumb-link">
+                                                        <img src={file.previewUrl} alt="" class="preview-thumb" title={file.Title} />
+                                                    </a>
+                                                </template>
+                                                <template if:false={file.previewUrl}>
+                                                    <lightning-icon icon-name={file.iconName} size="small" alternative-text="Arquivo" title={file.FileExtension}></lightning-icon>
+                                                </template>
+                                            </template>
+                                            <template if:false={file.isImage}>
+                                                <template if:true={file.previewUrl}>
+                                                    <a href={file.previewUrl} onclick={handleLinkClick}>
+                                                        <lightning-icon icon-name={file.iconName} size="small" alternative-text="Arquivo" title={file.FileExtension}></lightning-icon>
+                                                    </a>
+                                                </template>
+                                                <template if:false={file.previewUrl}>
+                                                    <lightning-icon icon-name={file.iconName} size="small" alternative-text="Arquivo" title={file.FileExtension}></lightning-icon>
+                                                </template>
+                                            </template>
+                                        </td>
+                                        <td class="col-title" title={file.Title}>
+                                            <a href="#" onclick={handlePreview} data-file-id={file.Id} class="file-link">{file.Title}</a>
+                                        </td>
+                                        <td class="col-categoria">
+                                            <span class={file.categoriaBadgeClass}>{file.categoria}</span>
+                                        </td>
+                                        <td class="col-tipo">
+                                            <span class="ext-badge">{file.FileExtension}</span>
+                                        </td>
+                                        <td class="col-tamanho">{file.formattedSize}</td>
+                                        <td class="col-data">{file.formattedDate}</td>
+                                        <td class="col-acoes">
+                                            <lightning-button-menu
+                                                alternative-text="Ações"
+                                                variant="border-filled"
+                                                icon-name="utility:threedots_vertical"
+                                                onselect={handleMenuSelect}
+                                                data-file-id={file.Id}
+                                                menu-alignment="auto"
+                                            >
+                                                <lightning-menu-item value="preview" label="Visualizar" icon-name="utility:preview"></lightning-menu-item>
+                                                <lightning-menu-item value="download" label="Download" icon-name="utility:download"></lightning-menu-item>
+                                                <lightning-menu-item value="edit" label="Editar" icon-name="utility:edit"></lightning-menu-item>
+                                                <lightning-menu-divider></lightning-menu-divider>
+                                                <lightning-menu-item value="delete" label="Excluir" icon-name="utility:delete"></lightning-menu-item>
+                                            </lightning-button-menu>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </template>
+
+                    <!-- Estado vazio -->
+                    <template if:false={filesFiltrados.length}>
+                        <div class="empty-state">
+                            <lightning-icon icon-name="utility:file" size="large" class="empty-icon"></lightning-icon>
+                            <p class="empty-title">Nenhum documento anexado</p>
+                            <p class="empty-subtitle">Selecione uma categoria e faça o upload do primeiro arquivo.</p>
+                        </div>
+                    </template>
+                </template>
+
+                <lightning-spinner if:true={loading} size="medium" alternative-text="Carregando..."></lightning-spinner>
+            </div>
+
+            <!-- Seção de upload -->
+            <div class="upload-section">
+                <div class="upload-section-header">
+                    <lightning-icon icon-name="utility:upload" size="x-small"></lightning-icon>
+                    <span>Adicionar Anexo</span>
+                </div>
+
+                <div class="upload-body">
+                    <div class="upload-combobox">
+                        <lightning-combobox
+                            label="Categoria"
+                            value={categoriaSelecionada}
+                            placeholder="Selecione..."
+                            options={categorias}
+                            onchange={handleCategoriaChange}
+                        ></lightning-combobox>
+                    </div>
+                    <div class="upload-drop-zone">
+                        <lightning-file-upload
+                            record-id={recordId}
+                            label=" "
+                            name="file"
+                            accept={acceptedFormats}
+                            onuploadfinished={arquivosEnviados}
+                            multiple
+                            disabled={isCategoriaVazia}
+                        ></lightning-file-upload>
+                    </div>
+                </div>
+
+                <!-- Alertas de obrigatórios -->
+                <template if:true={mostrarAlertaObrigatorio}>
+                    <div class="alertas-wrapper">
+                        <template for:each={categoriasFaltandoItems} for:item="item">
+                            <div key={item.key} class="alerta-banner">
+                                <lightning-icon icon-name="utility:warning" size="x-small" variant="warning"></lightning-icon>
+                                <span>Obrigatório: <strong>{item.label}</strong></span>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+        </div>
+    </lightning-card>
+
+    <!-- Modal de confirmação de exclusão -->
+    <template if:true={isModalOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container modal-container">
+                <header class="slds-modal__header modal-header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Fechar" onclick={hideModalBox}>
+                        <lightning-icon icon-name="utility:close" alternative-text="Fechar" variant="inverse" size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Fechar</span>
+                    </button>
+                    <div class="modal-header-content">
+                        <lightning-icon icon-name="utility:delete" size="small" variant="inverse"></lightning-icon>
+                        <h2 class="slds-text-heading_medium">Confirmar Exclusão</h2>
+                    </div>
+                </header>
+
+                <div class="slds-modal__content modal-body" id="modal-content-id-1">
+                    <template if:true={fileToDelete}>
+                        <div class="modal-file-info">
+                            <lightning-icon icon-name="utility:file" size="medium"></lightning-icon>
+                            <p class="modal-file-name">{fileToDelete.Title}</p>
+                        </div>
+                        <p class="modal-warning-text">Esta ação não pode ser desfeita.</p>
+                    </template>
+                </div>
+
+                <footer class="slds-modal__footer modal-footer">
+                    <button class="slds-button btn-cancelar" onclick={hideModalBox}>Cancelar</button>
+                    <button class="slds-button btn-excluir" onclick={confirmarExclusao} disabled={loading}>
+                        <template if:true={loading}>
+                            <lightning-spinner size="x-small" alternative-text="Excluindo..."></lightning-spinner>
+                        </template>
+                        <template if:false={loading}>
+                            <lightning-icon icon-name="utility:delete" size="x-small" variant="inverse"></lightning-icon>
+                        </template>
+                        Excluir
+                    </button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

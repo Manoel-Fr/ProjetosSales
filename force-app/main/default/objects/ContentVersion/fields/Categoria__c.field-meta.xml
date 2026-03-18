@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Categoria__c</fullName>
+    <externalId>false</externalId>
+    <label>Categoria</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Diversos</fullName>
+                <default>true</default>
+                <label>Diversos</label>
+            </value>
+            <value>
+                <fullName>Etiqueta do Produto</fullName>
+                <default>false</default>
+                <label>Etiqueta do Produto</label>
+            </value>
+            <value>
+                <fullName>Vídeo e/ou Foto do Problema</fullName>
+                <default>false</default>
+                <label>Vídeo e/ou Foto do Problema</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
