@@ -4,7 +4,7 @@
         <div class="card-header" slot="title">
             <div class="card-header-inner">
                 <div class="card-header-icon">
-                    <lightning-icon icon-name="utility:attach" size="small" variant="inverse"></lightning-icon>
+                    <lightning-icon icon-name="doctype:gdoc" size="small" variant="inverse"></lightning-icon>
                 </div>
                 <div>
                     <span class="card-header-title">Gerenciar Documentos</span>
@@ -17,7 +17,7 @@
             <template for:each={categoriasNav} for:item="categoria">
                 <div key={categoria.key} class={categoria.navCardClass} data-categoria={categoria.value} onclick={handleNavCardClick} role="button" tabindex="0">
                     <div class="nav-card-icon">
-                        <lightning-icon icon-name="utility:attach" size="small" variant="inverse"></lightning-icon>
+                        <lightning-icon icon-name="doctype:gdoc" size="small" variant="inverse"></lightning-icon>
                     </div>
                     <div class="nav-card-content">
                         <h3 class="nav-card-title">{categoria.label}</h3>

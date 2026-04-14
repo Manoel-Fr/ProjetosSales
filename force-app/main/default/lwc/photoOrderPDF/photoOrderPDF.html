@@ -1,0 +1,130 @@
+<template>
+    <lightning-card>
+
+        <!-- Header customizado -->
+        <div class="card-header" slot="title">
+            <div class="card-header-inner">
+                <div class="card-header-icon">
+                    <lightning-icon icon-name="doctype:image" size="small" variant="inverse"></lightning-icon>
+                </div>
+                <div>
+                    <span class="card-header-title">Gerar PDF com Fotos</span>
+                    <span class="card-header-subtitle">Selecione, ordene e exporte as fotos em PDF</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-container">
+
+            <!-- Seção de Upload -->
+            <div class="upload-section">
+                <div class="upload-section-header">
+                    <lightning-icon icon-name="utility:upload" size="x-small"></lightning-icon>
+                    <span>Adicionar Fotos</span>
+                </div>
+                <div class="upload-body">
+                    <p class="upload-hint">Aceito: .jpg, .jpeg, .png — máximo 5 fotos</p>
+                    <lightning-file-upload
+                        label="Selecionar fotos"
+                        name="fileUploader"
+                        accept=".jpg,.jpeg,.png"
+                        record-id={recordId}
+                        multiple
+                        onuploadfinished={handleUpload}>
+                    </lightning-file-upload>
+                </div>
+            </div>
+
+            <!-- Lista de fotos para reordenar -->
+            <template if:true={photos.length}>
+                <div class="table-wrapper">
+                    <table class="doc-table">
+                        <thead>
+                            <tr>
+                                <th class="col-pos">#</th>
+                                <th class="col-thumb">Foto</th>
+                                <th class="col-title">Nome</th>
+                                <th class="col-acoes">Ordem / Remover</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={photos} for:item="photo" for:index="index">
+                                <tr key={photo.id} class="doc-row">
+
+                                    <td class="col-pos">
+                                        <span class="position-badge">{photo.position}</span>
+                                    </td>
+
+                                    <td class="col-thumb">
+                                        <img
+                                            class="preview-thumb"
+                                            src={photo.previewUrl}
+                                            alt={photo.title} />
+                                    </td>
+
+                                    <td class="col-title" title={photo.title}>
+                                        <span class="photo-name">{photo.title}</span>
+                                    </td>
+
+                                    <td class="col-acoes">
+                                        <div class="action-group">
+                                            <lightning-button-icon
+                                                icon-name="utility:up"
+                                                variant="border"
+                                                size="small"
+                                                title="Mover para cima"
+                                                disabled={photo.isFirst}
+                                                data-id={photo.id}
+                                                onclick={moveUp}>
+                                            </lightning-button-icon>
+                                            <lightning-button-icon
+                                                icon-name="utility:down"
+                                                variant="border"
+                                                size="small"
+                                                title="Mover para baixo"
+                                                disabled={photo.isLast}
+                                                data-id={photo.id}
+                                                onclick={moveDown}>
+                                            </lightning-button-icon>
+                                            <lightning-button-icon
+                                                icon-name="utility:delete"
+                                                variant="border-filled"
+                                                size="small"
+                                                alternative-text="Remover"
+                                                title="Remover foto"
+                                                data-id={photo.id}
+                                                onclick={removePhoto}>
+                                            </lightning-button-icon>
+                                        </div>
+                                    </td>
+
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Botão Gerar PDF -->
+                <div class="generate-section">
+                    <lightning-button
+                        label="Gerar PDF"
+                        variant="brand"
+                        icon-name="utility:download"
+                        onclick={handleGeneratePDF}
+                        disabled={isGenerating}>
+                    </lightning-button>
+                </div>
+            </template>
+
+            <!-- Loading -->
+            <template if:true={isGenerating}>
+                <div class="alerta-banner alerta-info">
+                    <lightning-spinner size="x-small" alternative-text="Gerando PDF..."></lightning-spinner>
+                    <span>Gerando PDF, aguarde...</span>
+                </div>
+            </template>
+
+
+        </div>
+    </lightning-card>
+</template>

@@ -3,71 +3,128 @@
  */
 public with sharing class AutentiqueService {
 
-    private static final String AUTENTIQUE_CONFIG_OBJECT = 'Autentique_Integration__c';
+    private static final String AUTENTIQUE_CONFIG_OBJECT = 'DatagoProjects__Autentique_Integration__c';
     private static final String AUTENTIQUE_DEFAULT_BASE_URL = 'https://api.autentique.com.br';
     private static final String AUTENTIQUE_DEFAULT_GRAPHQL_PATH = '/v2/graphql';
     private static final String EMAIL_REGEX = '^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}$';
-    private static final String PDF_CONTENT_TYPE = 'application/pdf';
-    private static final String HTML_CONTENT_TYPE = 'text/html; charset=UTF-8';
-    private static final String PDF_FILE_NAME = 'contrato.pdf';
-    private static final String HTML_FILE_NAME = 'contrato.html';
+
+    public class SignerInput {
+        @AuraEnabled public String name;
+        @AuraEnabled public String email;
+    }
 
     @AuraEnabled
     public static AutentiqueSendResult sendDocumentToAutentique(
         String opportunityId,
-        String signerName,
-        String signerEmail
+        String signersJson
     ) {
         if (String.isBlank(opportunityId)) {
             throw new GoogleDocsException('Informe a oportunidade para envio ao Autentique.');
         }
-        if (!isValidEmail(signerEmail)) {
-            throw new GoogleDocsException('Informe um e-mail válido para o signatário.');
+        if (String.isBlank(signersJson)) {
+            throw new GoogleDocsException('Informe ao menos um signatário.');
+        }
+        List<SignerInput> signers;
+        try {
+            signers = (List<SignerInput>) JSON.deserialize(signersJson, List<SignerInput>.class);
+        } catch (Exception e) {
+            throw new GoogleDocsException('Formato de signatários inválido.');
+        }
+        if (signers == null || signers.isEmpty()) {
+            throw new GoogleDocsException('Informe ao menos um signatário.');
+        }
+        for (SignerInput s : signers) {
+            if (!isValidEmail(s.email)) {
+                throw new GoogleDocsException('E-mail inválido: ' + s.email);
+            }
         }
 
-        Opportunity opp = [SELECT Name, Account.Name FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
+        Opportunity opp = [SELECT Name, Account.Name, Google_Doc_Url__c FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
         String documentName = String.isNotBlank(opp.Account?.Name)
             ? 'Contrato - ' + opp.Account.Name + ' - ' + opp.Name
             : 'Contrato - ' + opp.Name;
 
         String accessToken = GoogleAuthService.refreshAccessToken();
-        String googleDocUrl = GoogleDocsService.createDocumentFromOpportunity(opportunityId);
+        String googleDocUrl = String.isNotBlank(opp.Google_Doc_Url__c)
+            ? opp.Google_Doc_Url__c
+            : GoogleDocsService.createDocumentFromOpportunity(opportunityId);
         String docId = GoogleDocsService.extractDocumentIdFromUrl(googleDocUrl);
         AutentiqueFilePayload filePayload = buildAutentiqueFilePayload(accessToken, docId);
 
         AutentiqueApiConfig cfg = getAutentiqueApiConfig();
-        AutentiqueSendResult result = createAutentiqueDocument(cfg, filePayload, documentName, signerName, signerEmail);
+        AutentiqueSendResult result = createAutentiqueDocument(cfg, filePayload, documentName, signers);
 
         result.googleDocUrl = googleDocUrl;
         if (String.isBlank(result.message)) {
             result.message = 'Documento enviado ao Autentique com sucesso.';
         }
+
+        update new Opportunity(
+            Id = opportunityId,
+            DatagoProjects__DocId__c = result.autentiqueDocumentId,
+            DatagoProjects__AssEnv__c = true
+        );
+
+        List<Assinatura__c> assinaturas = new List<Assinatura__c>();
+        // 1. Criador (quem enviou)
+        User currentUser = [SELECT Name, Email FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+        assinaturas.add(new Assinatura__c(
+            AssOpp__c = opportunityId,
+            AutDoc__c = result.autentiqueDocumentId,
+            TpSign__c = 'Criador',
+            NmSign__c = currentUser.Name,
+            EmlAss__c = currentUser.Email,
+            StsAss__c = 'Assinado',
+            DtAssn__c = DateTime.now(),
+            OrdAss__c = 0
+        ));
+        // 2. Signatários (um por cada)
+        Map<String, SignerResultInternal> signerResultMap = new Map<String, SignerResultInternal>();
+        for (SignerResultInternal sr : result.allSignerResults) {
+            signerResultMap.put(sr.email?.toLowerCase(), sr);
+        }
+        for (Integer i = 0; i < signers.size(); i++) {
+            SignerInput s = signers[i];
+            SignerResultInternal sr = signerResultMap.get(s.email?.trim().toLowerCase());
+            assinaturas.add(new Assinatura__c(
+                AssOpp__c = opportunityId,
+                AutDoc__c = result.autentiqueDocumentId,
+                AutSig__c = sr != null ? sr.publicId : null,
+                TpSign__c = 'Signatário',
+                NmSign__c = String.isNotBlank(s.name) ? s.name : s.email,
+                EmlAss__c = s.email,
+                StsAss__c = 'Email_Enviado',
+                DtEnEm__c = DateTime.now(),
+                OrdAss__c = i + 1
+            ));
+        }
+        insert assinaturas;
+
+        
         return result;
     }
 
     private static AutentiqueFilePayload buildAutentiqueFilePayload(String accessToken, String documentId) {
         try {
             Blob pdfContent = GoogleDocsService.exportGoogleDocumentAsPdf(accessToken, documentId);
-            return new AutentiqueFilePayload(PDF_FILE_NAME, PDF_CONTENT_TYPE, pdfContent);
+            return new AutentiqueFilePayload('contrato.pdf', 'application/pdf', pdfContent);
         } catch (Exception ignored) {
             // Fallback para HTML se o export para PDF falhar em algum cenário específico.
         }
-
-        String htmlContent = GoogleDocsService.exportGoogleDocumentAsHtml(accessToken, documentId);
-        Blob htmlBlob = Blob.valueOf(htmlContent);
-        return new AutentiqueFilePayload(HTML_FILE_NAME, HTML_CONTENT_TYPE, htmlBlob);
+        return new AutentiqueFilePayload('contrato.html', 'text/html; charset=UTF-8',
+            Blob.valueOf(GoogleDocsService.exportGoogleDocumentAsHtml(accessToken, documentId)));
     }
 
     private static AutentiqueApiConfig getAutentiqueApiConfig() {
         Schema.SObjectType cfgType = Schema.getGlobalDescribe().get(AUTENTIQUE_CONFIG_OBJECT);
         if (cfgType == null) {
             throw new GoogleDocsException(
-                'Configuração ausente. Crie a Custom Setting Hierarchy "Autentique_Integration__c".'
+                'Configuração ausente. Crie a Custom Setting Hierarchy "DatagoProjects__Autentique_Integration__c".'
             );
         }
 
         String soql =
-            'SELECT Is_Enabled__c, Base_Url__c, Graphql_Path__c, Api_Token__c ' +
+            'SELECT DatagoProjects__Is_Enabled__c, DatagoProjects__Base_Url__c, DatagoProjects__Graphql_Path__c, DatagoProjects__Api_Token__c ' +
             'FROM ' + AUTENTIQUE_CONFIG_OBJECT + ' ' +
             'WHERE SetupOwnerId = \'' + String.escapeSingleQuotes(UserInfo.getOrganizationId()) + '\' ' +
             'LIMIT 1';
@@ -89,14 +146,14 @@ public with sharing class AutentiqueService {
 
         SObject row = rows[0];
         AutentiqueApiConfig cfg = new AutentiqueApiConfig();
-        cfg.enabled = (Boolean) row.get('Is_Enabled__c');
-        cfg.baseUrl = (String) row.get('Base_Url__c');
-        cfg.graphqlPath = (String) row.get('Graphql_Path__c');
-        cfg.apiToken = (String) row.get('Api_Token__c');
+        cfg.enabled = (Boolean) row.get('DatagoProjects__Is_Enabled__c');
+        cfg.baseUrl = (String) row.get('DatagoProjects__Base_Url__c');
+        cfg.graphqlPath = (String) row.get('DatagoProjects__Graphql_Path__c');
+        cfg.apiToken = (String) row.get('DatagoProjects__Api_Token__c');
 
-        if (cfg.enabled == null) cfg.enabled = true;
-        if (String.isBlank(cfg.baseUrl)) cfg.baseUrl = AUTENTIQUE_DEFAULT_BASE_URL;
-        if (String.isBlank(cfg.graphqlPath)) cfg.graphqlPath = AUTENTIQUE_DEFAULT_GRAPHQL_PATH;
+        cfg.enabled = cfg.enabled != null ? cfg.enabled : true;
+        cfg.baseUrl = String.isNotBlank(cfg.baseUrl) ? cfg.baseUrl : AUTENTIQUE_DEFAULT_BASE_URL;
+        cfg.graphqlPath = String.isNotBlank(cfg.graphqlPath) ? cfg.graphqlPath : AUTENTIQUE_DEFAULT_GRAPHQL_PATH;
 
         if (!cfg.enabled) {
             throw new GoogleDocsException('Integração com Autentique está desativada na configuração.');
@@ -111,25 +168,22 @@ public with sharing class AutentiqueService {
         AutentiqueApiConfig cfg,
         AutentiqueFilePayload filePayload,
         String documentName,
-        String signerName,
-        String signerEmail
+        List<SignerInput> signers
     ) {
-        String mutation =
-            'mutation CreateDocumentMutation($document: DocumentInput!, $signers: [SignerInput!]!, $file: Upload!) {' +
-            ' createDocument(document: $document, signers: $signers, file: $file) {' +
-            '  id name signatures { public_id name email link { short_link } }' +
-            ' }' +
-            '}';
+        String mutation = 'mutation CreateDocumentMutation($document: DocumentInput!, $signers: [SignerInput!]!, $file: Upload!) { createDocument(document: $document, signers: $signers, file: $file) { id name signatures { public_id name email link { short_link } } } }';
 
-        Map<String, Object> signer = new Map<String, Object>{
-            'email' => signerEmail != null ? signerEmail.trim() : '',
-            'action' => 'SIGN',
-            'name' => String.isNotBlank(signerName) ? signerName.trim() : signerEmail
-        };
+        List<Object> signersList = new List<Object>();
+        for (SignerInput s : signers) {
+            signersList.add(new Map<String, Object>{
+                'email' => s.email.trim(),
+                'action' => 'SIGN',
+                'name' => String.isNotBlank(s.name) ? s.name.trim() : s.email.trim()
+            });
+        }
 
         Map<String, Object> variables = new Map<String, Object>{
             'document' => new Map<String, Object>{ 'name' => documentName },
-            'signers' => new List<Object>{ signer },
+            'signers' => signersList,
             'file' => null
         };
 
@@ -181,17 +235,25 @@ public with sharing class AutentiqueService {
         AutentiqueSendResult result = new AutentiqueSendResult();
         result.autentiqueDocumentId = String.valueOf(doc.get('id'));
         result.documentName = String.valueOf(doc.get('name'));
-        result.signerEmail = signerEmail;
+        result.allSignerResults = new List<SignerResultInternal>();
 
         List<Object> signatures = (List<Object>) doc.get('signatures');
-        if (signatures != null && !signatures.isEmpty()) {
-            Map<String, Object> firstSignature = (Map<String, Object>) signatures[0];
-            result.signerPublicId = String.valueOf(firstSignature.get('public_id'));
-            if (firstSignature.containsKey('link')) {
-                Map<String, Object> link = (Map<String, Object>) firstSignature.get('link');
-                if (link != null) {
-                    result.signatureLink = String.valueOf(link.get('short_link'));
+        if (signatures != null) {
+            for (Object sigObj : signatures) {
+                Map<String, Object> sig = (Map<String, Object>) sigObj;
+                SignerResultInternal sr = new SignerResultInternal();
+                sr.email = String.valueOf(sig.get('email'));
+                sr.publicId = String.valueOf(sig.get('public_id'));
+                if (sig.containsKey('link')) {
+                    Map<String, Object> link = (Map<String, Object>) sig.get('link');
+                    if (link != null) sr.signatureLink = String.valueOf(link.get('short_link'));
                 }
+                result.allSignerResults.add(sr);
+            }
+            if (!result.allSignerResults.isEmpty()) {
+                result.signerPublicId = result.allSignerResults[0].publicId;
+                result.signatureLink = result.allSignerResults[0].signatureLink;
+                result.signerEmail = result.allSignerResults[0].email;
             }
         }
         return result;
@@ -212,39 +274,26 @@ public with sharing class AutentiqueService {
             throw new GoogleDocsException('Arquivo para envio ao Autentique está vazio.');
         }
 
-        String fileHeader = '';
-        fileHeader += '--' + boundary + '\r\n';
-        fileHeader += 'Content-Disposition: form-data; name="operations"\r\n\r\n';
-        fileHeader += JSON.serialize(operations) + '\r\n';
-        fileHeader += '--' + boundary + '\r\n';
-        fileHeader += 'Content-Disposition: form-data; name="map"\r\n\r\n';
-        fileHeader += JSON.serialize(mapPart) + '\r\n';
-        fileHeader += '--' + boundary + '\r\n';
-        fileHeader += 'Content-Disposition: form-data; name="file"; filename="' + filePayload.fileName + '"\r\n';
-        fileHeader += 'Content-Type: ' + filePayload.contentType + '\r\n\r\n';
+        String fileHeader =
+            '--' + boundary + '\r\nContent-Disposition: form-data; name="operations"\r\n\r\n' +
+            JSON.serialize(operations) + '\r\n' +
+            '--' + boundary + '\r\nContent-Disposition: form-data; name="map"\r\n\r\n' +
+            JSON.serialize(mapPart) + '\r\n' +
+            '--' + boundary + '\r\nContent-Disposition: form-data; name="file"; filename="' + filePayload.fileName + '"\r\n' +
+            'Content-Type: ' + filePayload.contentType + '\r\n\r\n';
 
-        String fileFooter = '\r\n--' + boundary + '--';
-
-        Blob headerBlob = Blob.valueOf(fileHeader);
-        Blob footerBlob = Blob.valueOf(fileFooter);
-
-        String combinedHex =
-            EncodingUtil.convertToHex(headerBlob) +
+        return EncodingUtil.convertFromHex(
+            EncodingUtil.convertToHex(Blob.valueOf(fileHeader)) +
             EncodingUtil.convertToHex(filePayload.content) +
-            EncodingUtil.convertToHex(footerBlob);
-
-        return EncodingUtil.convertFromHex(combinedHex);
+            EncodingUtil.convertToHex(Blob.valueOf('\r\n--' + boundary + '--'))
+        );
     }
 
     private static String joinUrl(String baseUrl, String path) {
         String b = baseUrl != null ? baseUrl.trim() : '';
         String p = path != null ? path.trim() : '';
         if (String.isBlank(p)) return b;
-        Boolean bEnds = b.endsWith('/');
-        Boolean pStarts = p.startsWith('/');
-        if (bEnds && pStarts) return b.substring(0, b.length() - 1) + p;
-        if (!bEnds && !pStarts) return b + '/' + p;
-        return b + p;
+        return b.removeEnd('/') + (p.startsWith('/') ? p : '/' + p);
     }
 
     private static Boolean isValidEmail(String email) {
@@ -272,6 +321,13 @@ public with sharing class AutentiqueService {
         @AuraEnabled public String signerEmail;
         @AuraEnabled public String googleDocUrl;
         @AuraEnabled public String message;
+        public List<SignerResultInternal> allSignerResults;
+    }
+
+    private class SignerResultInternal {
+        public String email;
+        public String publicId;
+        public String signatureLink;
     }
 
     private class AutentiqueApiConfig {

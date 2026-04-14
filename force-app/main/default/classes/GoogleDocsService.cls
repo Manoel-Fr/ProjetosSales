@@ -56,7 +56,9 @@ public with sharing class GoogleDocsService {
         Map<String, String> variaveis = buildReplacementMap(opp);
         replaceVariablesInDocument(accessToken, docId, variaveis, productItems);
 
-        return 'https://docs.google.com/document/d/' + docId + '/edit';
+        String docUrl = 'https://docs.google.com/document/d/' + docId + '/edit';
+        update new Opportunity(Id = opportunityId, Google_Doc_Url__c = docUrl);
+        return docUrl;
     }
 
     /**

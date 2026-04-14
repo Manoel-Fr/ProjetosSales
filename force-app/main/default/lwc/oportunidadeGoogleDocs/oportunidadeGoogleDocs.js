@@ -1,9 +1,13 @@
-import { LightningElement, api } from 'lwc';
+import { LightningElement, api, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
+import GOOGLE_DOC_URL_FIELD from '@salesforce/schema/Opportunity.Google_Doc_Url__c';
 import isAuthorized from '@salesforce/apex/GoogleAuthService.isAuthorized';
+import ASSINATURA_ENVIADA_FIELD from '@salesforce/schema/Opportunity.AssEnv__c';
 import getAuthorizationUrl from '@salesforce/apex/GoogleAuthService.getAuthorizationUrl';
 import createDocumentFromOpportunity from '@salesforce/apex/GoogleDocsService.createDocumentFromOpportunity';
 import sendDocumentToAutentique from '@salesforce/apex/AutentiqueService.sendDocumentToAutentique';
+import getAssinaturas from '@salesforce/apex/AssinaturasController.getAssinaturas';
 
 const LOADING_MESSAGES_DOCS = [
     'Criando documento...',
@@ -27,7 +31,36 @@ export default class OportunidadeGoogleDocs extends LightningElement {
     loadingMessage = 'Carregando...';
     signerName = '';
     signerEmail = '';
+    signers = [];
+    assinaturas = [];
     _progressInterval = null;
+    _googleDocUrl = null;
+    _assinaturaEnviada = false;
+
+    @wire(getRecord, { recordId: '$recordId', fields: [GOOGLE_DOC_URL_FIELD, ASSINATURA_ENVIADA_FIELD] })
+    wiredRecord({ data }) {
+        if (data) {
+            this._googleDocUrl = getFieldValue(data, GOOGLE_DOC_URL_FIELD);
+            this._assinaturaEnviada = getFieldValue(data, ASSINATURA_ENVIADA_FIELD);
+            this.getAssinaturas();
+        }
+    }
+
+    get googleDocUrl() {
+        return this._googleDocUrl;
+    }
+
+    get openDocsLabel() {
+        return this._googleDocUrl ? 'Abrir documento' : 'Criar no Google Docs';
+    }
+
+    /**
+     * Mostra o formulário de signatários quando a assinatura ainda NÃO foi enviada.
+     * AssEnv__c (checkbox) = true significa "já enviado" → esconde formulário.
+     */
+    get assinaturaEnviada() {
+        return this._assinaturaEnviada !== true;
+    }
 
     connectedCallback() {
         this.checkAuthorization();
@@ -38,7 +71,8 @@ export default class OportunidadeGoogleDocs extends LightningElement {
     }
 
     get isSendAutentiqueDisabled() {
-        return !this.isAuthorized || this.isLoading || !this.signerEmail;
+        const temEmail = this.signerEmail?.trim() || this.signers?.length > 0;
+        return !this.isAuthorized || this.isLoading || !temEmail;
     }
 
     async checkAuthorization() {
@@ -49,6 +83,38 @@ export default class OportunidadeGoogleDocs extends LightningElement {
         } catch (error) {
             console.error('Erro ao verificar autorização:', error);
             this.isAuthorized = false;
+        }
+    }
+
+    async getAssinaturas() {
+        if (!this.recordId) return;
+        try {
+            const lista = await getAssinaturas({ opportunityId: this.recordId });
+            const fmt = (d) => d ? new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : null;
+            this.assinaturas = (lista || []).map((a) => {
+                const name = a.NmSign__c ?? a.DatagoProjects__NmSign__c ?? '';
+                const email = a.EmlAss__c ?? a.DatagoProjects__EmlAss__c ?? '';
+                const parts = name.trim().split(/\s+/);
+                const initials = parts.length >= 2
+                    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+                    : (parts[0]?.[0] ?? '?').toUpperCase();
+                const ns = 'DatagoProjects__';
+                const status = a[`${ns}StsAss__c`] ?? a.StsAss__c ?? '';
+                const dtAssn = a[`${ns}DtAssn__c`] ?? a.DtAssn__c ?? null;
+                const dtEnEm = a[`${ns}DtEnEm__c`] ?? a.DtEnEm__c ?? null;
+                const dtAbDc = a[`${ns}DtAbDc__c`] ?? a.DtAbDc__c ?? null;
+                const signed = !!dtAssn;
+                const statusClass = signed ? 'assinatura-status assinatura-status--signed' : 'assinatura-status assinatura-status--pending';
+                return {
+                    Id: a.Id, name, email, initials, status, statusClass,
+                    dtEnviado: fmt(dtEnEm),
+                    dtAberto: fmt(dtAbDc),
+                    dtAssinado: fmt(dtAssn)
+                };
+            });
+        } catch (error) {
+            console.error('Erro ao buscar assinaturas:', error);
+            this.assinaturas = [];
         }
     }
 
@@ -71,13 +137,19 @@ export default class OportunidadeGoogleDocs extends LightningElement {
     }
 
     async handleOpenInDocs() {
+        if (this._googleDocUrl) {
+            this.openInNewTab(this._googleDocUrl);
+            return;
+        }
+
         try {
             await this.withLoading(
                 async () => {
                     const documentUrl = await createDocumentFromOpportunity({
                         opportunityId: this.recordId
                     });
-                    this.openInNewTab(documentUrl);
+                    this._googleDocUrl = documentUrl;
+                //    this.openInNewTab(documentUrl);
                 },
                 LOADING_MESSAGES_DOCS
             );
@@ -112,29 +184,45 @@ export default class OportunidadeGoogleDocs extends LightningElement {
         this.signerEmail = event.target.value;
     }
 
+    handleAddSigner() {
+        if (!this.signerEmail?.trim()) return;
+        this.signers = [...this.signers, { id: Date.now(), name: this.signerName?.trim() || this.signerEmail, email: this.signerEmail.trim() }];
+        this.signerName = '';
+        this.signerEmail = '';
+    }
+
+    handleRemoveSigner(event) {
+        const i = parseInt(event.currentTarget.dataset.index, 10);
+        this.signers = this.signers.filter((_, idx) => idx !== i);
+    }
+
+    get hasSigners() {
+        return this.signers?.length > 0;
+    }
+
     async handleSendToAutentique() {
         try {
+            const signersToSend = this.signers.length > 0
+                ? this.signers.map(({ name, email }) => ({ name, email }))
+                : [{ name: this.signerName?.trim() || this.signerEmail?.trim(), email: this.signerEmail?.trim() }];
+
+            if (!signersToSend[0]?.email) return;
+
             const result = await this.withLoading(
                 () =>
                     sendDocumentToAutentique({
                         opportunityId: this.recordId,
-                        signerName: this.signerName,
-                        signerEmail: this.signerEmail
+                        signersJson: JSON.stringify(signersToSend)
                     }),
                 LOADING_MESSAGES_AUTENTIQUE
             );
-
-            // if (result?.signatureLink) {
-            //     this.openInNewTab(result.signatureLink);
-            // } else if (result?.googleDocUrl) {
-            //     this.openInNewTab(result.googleDocUrl);
-            // }
 
             this.showToast(
                 'Enviado ao Autentique',
                 result?.message || 'Documento enviado para assinatura eletrônica.',
                 'success'
             );
+            this.getAssinaturas();
         } catch (error) {
             console.error('Erro ao enviar para Autentique:', error);
             this.showError('Não foi possível enviar para o Autentique: ' + this.getErrorMessage(error));

@@ -1,0 +1,56 @@
+<!--  ----------------------------------------------------------------------  -->
+<!--  NOTA: Adicione o seguinte elemento <META> à sua página <HEAD>.  Se      -->
+<!--  necessário, modifique o parâmetro charset para especificar o conjunto   -->
+<!--  de caracteres de sua página HTML.                                       -->
+<!--  ----------------------------------------------------------------------  -->
+
+<META HTTP-EQUIV="Content-type" CONTENT="text/html; charset=UTF-8">
+
+<!--  ----------------------------------------------------------------------  -->
+<!--  NOTA: Adicione o elemento <FORM> a seguir à sua página.                 -->
+<!--  ----------------------------------------------------------------------  -->
+
+<form action="https://webto.salesforce.com/servlet/servlet.WebToCase?encoding=UTF-8&orgId=00DDp0000016y5x" method="POST">
+
+<input type=hidden name="orgid" value="00DDp0000016y5x">
+<input type=hidden name="retURL" value="https://www.azulpack.com.br/sac/">
+
+<!--  ----------------------------------------------------------------------  -->
+<!--  NOTA: Estes campos são elementos de depuração opcionais. Remova o       -->
+<!--  comentário dessas linhas se quiser testar no modo de depuração.         -->
+ <!-- <input type="hidden" name="debug" value=1>                             
+ <input type="hidden" name="debugEmail" value="log@datago.com.br">       -->
+<!--  ----------------------------------------------------------------------  -->
+
+<label for="company">Empresa</label><input  id="company" maxlength="80" name="company" size="20" type="text" /><br>
+
+<label for="name">Nome do contato</label><input  id="name" maxlength="80" name="name" size="20" type="text" /><br>
+
+<label for="email">Email</label><input  id="email" maxlength="80" name="email" size="20" type="text" /><br>
+
+<label for="phone">Telefone</label><input  id="phone" maxlength="40" name="phone" size="20" type="text" /><br>
+
+Unidade de Negócio:<select  id="00NSG00000ZNDre" name="00NSG00000ZNDre" title="Unidade de Negócio"><option value="">-- Nenhum --</option><option value="TechBags">TechBags</option>
+<option value="TechAgro">TechAgro</option>
+<option value="TechGround">TechGround</option>
+<option value="TechFilms">TechFilms</option>
+<option value="Exportação">Exportação</option>
+<option value="SapphireWrap (Cotton)">SapphireWrap (Cotton)</option>
+<option value="TechBags Exportação">TechBags Exportação</option>
+<option value="TechAgro Exportação">TechAgro Exportação</option>
+<option value="TechGround Exportação">TechGround Exportação</option>
+<option value="TechFilms Exportação">TechFilms Exportação</option>
+<option value="Cotton Exportação">Cotton Exportação</option>
+</select><br>
+
+Nota Fiscal Reclamada:<input  id="00NSG00000ZNMq5" maxlength="255" name="00NSG00000ZNMq5" size="20" type="text" /><br>
+
+Pedido Reclamado:<input  id="00NSG00000ZNN1N" maxlength="255" name="00NSG00000ZNN1N" size="20" type="text" /><br>
+
+<label for="description">Descrição</label><textarea name="description"></textarea><br>
+
+<input type="hidden"  id="external" name="external" value="1" /><br>
+
+<input type="submit" name="submit">
+
+</form>

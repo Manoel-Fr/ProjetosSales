@@ -23,47 +23,128 @@
                         </div>
                     </div>
 
-                    <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_small">
-                        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
-                            <lightning-input
-                                type="text"
-                                label="Nome do signatário"
-                                value={signerName}
-                                onchange={handleSignerNameChange}>
-                            </lightning-input>
-                        </div>
-                        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
-                            <lightning-input
-                                type="email"
-                                label="E-mail do signatário"
-                                required
-                                value={signerEmail}
-                                onchange={handleSignerEmailChange}>
-                            </lightning-input>
-                        </div>
+                    <div class="section-divider">
+                        <span class="slds-text-title_caps slds-text-color_weak">Documento</span>
                     </div>
-
-                    <div class="actions-row">
-                        <lightning-button
-                            variant="brand"
-                            label="Enviar para Autentique"
-                            icon-name="utility:send"
-                            onclick={handleSendToAutentique}
-                            disabled={isSendAutentiqueDisabled}>
-                        </lightning-button>
-
+                    <div class="slds-m-bottom_medium">
+                        <template lwc:if={googleDocUrl}>
+                            <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_x-small">
+                                Documento já gerado — edições serão usadas na assinatura.
+                            </p>
+                        </template>
                         <lightning-button
                             variant="neutral"
-                            label="Abrir no Google Docs"
+                            label={openDocsLabel}
                             icon-name="doctype:gdoc"
-                            onclick={handleOpenInDocs}
-                            class="slds-m-left_small">
+                            onclick={handleOpenInDocs}>
                         </lightning-button>
                     </div>
 
-                    <p class="slds-text-body_small slds-text-color_weak slds-m-top_small">
-                        O sistema cria o documento, envia ao Autentique e dispara a assinatura para o e-mail informado.
-                    </p>
+                    <div class="section-divider">
+                        <span class="slds-text-title_caps slds-text-color_weak">Assinatura eletrônica</span>
+                    </div>
+                    <template lwc:if={assinaturaEnviada}>
+                    <div class="signer-section">
+                        <div class="signer-inputs slds-grid slds-wrap slds-gutters">
+                            <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2 input-col">
+                                <lightning-input
+                                    type="text"
+                                    label="Nome do signatário"
+                                    value={signerName}
+                                    onchange={handleSignerNameChange}
+                                    class="signer-input">
+                                </lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2 input-col">
+                                <lightning-input
+                                    type="email"
+                                    label="E-mail do signatário"
+                                    required
+                                    value={signerEmail}
+                                    onchange={handleSignerEmailChange}
+                                    class="signer-input">
+                                </lightning-input>
+                            </div>
+                        </div>
+                        <div class="add-signer-row">
+                        <lightning-button
+                            variant="brand-outline"
+                            label="Adicionar signatário"
+                            icon-name="utility:add"
+                            icon-position="left"
+                            onclick={handleAddSigner}>
+                        </lightning-button>
+                    </div>
+                        <template lwc:if={hasSigners}>
+                            <ul class="signers-list">
+                                <template for:each={signers} for:item="s" for:index="idx">
+                                    <li key={s.id} class="signer-item">
+                                        <span class="signer-item-text"><strong>{s.name}</strong> <span class="signer-email">{s.email}</span></span>
+                                        <lightning-button-icon icon-name="utility:delete" alternative-text="Remover" data-index={idx} onclick={handleRemoveSigner} variant="bare" class="signer-remove-btn"></lightning-button-icon>
+                                    </li>
+                                </template>
+                            </ul>
+                        </template>
+                    </div>
+                  
+                    <lightning-button
+                        variant="brand"
+                        label="Enviar para Autentique"
+                        icon-name="utility:send"
+                        onclick={handleSendToAutentique}
+                        disabled={isSendAutentiqueDisabled}>
+                    </lightning-button>
+                </template>
+
+            
+                <template lwc:if={assinaturas}>
+                    <div class="assinaturas-section">
+                        <div class="section-divider">
+                            <span>Signatários</span>
+                        </div>
+                        <div class="assinaturas-grid">
+                            <template for:each={assinaturas} for:item="a">
+                                <div key={a.Id} class="assinatura-card">
+                                    <div class="assinatura-card-header">
+                                        <span class="assinatura-badge">Signatário</span>
+                                        <template lwc:if={a.status}><span class={a.statusClass}>{a.status}</span></template>
+                                    </div>
+                                    <div class="assinatura-avatar">{a.initials}</div>
+                                    <div class="assinatura-info">
+                                        <span class="assinatura-name">{a.name}</span>
+                                        <span class="assinatura-email">{a.email}</span>
+                                    </div>
+                                    <ul class="assinatura-dates">
+                                        <template lwc:if={a.dtEnviado}>
+                                            <li class="assinatura-date-item">
+                                                <span class="date-dot date-dot--sent"></span>
+                                                <span>E-mail enviado em {a.dtEnviado}</span>
+                                            </li>
+                                        </template>
+                                        <template lwc:if={a.dtAberto}>
+                                            <li class="assinatura-date-item">
+                                                <span class="date-dot date-dot--opened"></span>
+                                                <span>Documento aberto em {a.dtAberto}</span>
+                                            </li>
+                                        </template>
+                                        <template lwc:if={a.dtAssinado}>
+                                            <li class="assinatura-date-item">
+                                                <span class="date-dot date-dot--signed"></span>
+                                                <span>Assinado em {a.dtAssinado}</span>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+
+
+
+
+                
                 </template>
 
                 <template lwc:else>
@@ -89,5 +170,9 @@
                 </template>
             </div>
         </template>
+
+    <div class="gerenciar">
+        <c-gerenciar-documentos record-id={recordId}> </c-gerenciar-documentos>
+        </div>
     </lightning-card>
 </template>
