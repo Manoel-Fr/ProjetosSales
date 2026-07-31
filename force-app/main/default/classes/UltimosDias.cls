@@ -40,4 +40,3 @@ List<Quotacao_diaria__c> quotacao = new List<Quotacao_diaria__c>();
 
     }
  }
-    

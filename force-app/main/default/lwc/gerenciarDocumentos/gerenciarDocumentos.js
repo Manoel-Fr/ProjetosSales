@@ -75,6 +75,27 @@ export default class GerenciarDocumentos extends NavigationMixin(LightningElemen
         this.carregarArquivos();
     }
 
+    /**
+     * Atualiza a lista do photoOrderPDF após mudar arquivos.
+     * — Dois seletores: org sem namespace vs pacote (ex.: DatagoProjects).
+     * — Chama no próximo tick + após 400ms: link do arquivo pode atrasar no servidor.
+     */
+    notificarAtualizacaoFotosPdf() {
+        const runRefresh = () => {
+            const pdf =
+                this.template.querySelector('c-photo-order-p-d-f') ||
+                this.template.querySelector('c-datago-projects-photo-order-p-d-f');
+            if (pdf && typeof pdf.refreshListaFotos === 'function') {
+                pdf.refreshListaFotos();
+            }
+        };
+        Promise.resolve().then(() => {
+            runRefresh();
+            // eslint-disable-next-line @lwc/lwc/no-async-operation
+            window.setTimeout(runRefresh, 400);
+        });
+    }
+
     carregarArquivos() {
         if (!this.recordId) return;
 
@@ -191,6 +212,7 @@ export default class GerenciarDocumentos extends NavigationMixin(LightningElemen
                 this.files = result.map(doc => this.mapDocumento(doc));
                 this.loading = false;
                 this.showToast('Sucesso', 'Arquivo(s) enviado(s) com sucesso', 'success');
+                this.notificarAtualizacaoFotosPdf();
             })
             .catch(error => {
                 const msg = error?.body?.message || error?.message || 'Erro ao enviar arquivo(s)';
@@ -313,6 +335,7 @@ export default class GerenciarDocumentos extends NavigationMixin(LightningElemen
                 if (result === 'success') {
                     this.showToast('Sucesso', 'Arquivo excluído com sucesso', 'success');
                     this.carregarArquivos();
+                    this.notificarAtualizacaoFotosPdf();
                 } else {
                     this.showToast('Erro', result, 'error');
                 }

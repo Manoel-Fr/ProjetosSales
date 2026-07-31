@@ -1,0 +1,73 @@
+.corCard {
+    background-color: #f0f1f3; 
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+lightning-button.actions {
+    width: 100px; 
+    height: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+   
+    
+}
+
+
+.itemEm {
+    border: 1px solid #d1d1d1; 
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px; 
+}
+.itemEm p {
+    display: flex;
+    justify-content:space-between;
+    align-items: center;
+    
+    font-size: 14px;
+    
+}
+
+.lightning-button-menu {
+    margin-left: 10px;
+}
+.getEm {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center; 
+    gap: 20px;
+    justify-content: center;
+    width: 100%;  
+   
+}
+lightning-input {
+    flex-grow: 1;
+    padding: 10px;
+    margin-right: 5px; 
+}
+
+
+
+.cardEm {
+    display: grid;
+   
+    gap: 10px; 
+    padding: 0 20px;
+    margin-top: 10px;
+    max-height: 300px; 
+    overflow-y: auto; 
+    
+ 
+}
+
+.scroll-container {
+    max-height: 300px; 
+    overflow-y: auto; 
+    padding-left: 15px;
+}

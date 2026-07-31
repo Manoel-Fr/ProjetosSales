@@ -1,124 +1,138 @@
 import { LightningElement, api, track } from 'lwc';
 
 export default class PropostaVendas extends LightningElement {
+    
+    // ========== PROPRIEDADES RECEBIDAS DO PAI ==========
     @api clienteSelecionado = null;
     @api itensCarrinho = [];
 
-    @track descontoPercentual = 0;
+    // ========== PROPRIEDADES INTERNAS ==========
+    @track formaPagamento = 'avista';
+    @track percentualDesconto = 0;
+    @track numeroParcelas = '12';
     @track observacoes = '';
 
+    // ========== OPÇÕES DE COMBOBOX ==========
+    
+    get opcoesFormaPagamento() {
+        return [
+            { label: 'À Vista', value: 'avista' },
+            { label: 'Financiamento', value: 'financiamento' },
+            { label: 'Consórcio', value: 'consorcio' },
+            { label: 'Troca + Valor', value: 'troca' }
+        ];
+    }
+
+    get opcoesParcelas() {
+        return [
+            { label: '12x', value: '12' },
+            { label: '24x', value: '24' },
+            { label: '36x', value: '36' },
+            { label: '48x', value: '48' },
+            { label: '60x', value: '60' }
+        ];
+    }
+
+    // ========== VALIDAÇÕES ==========
+    
     get temCliente() {
-        return Boolean(this.clienteSelecionado);
+        return this.clienteSelecionado !== null;
     }
 
-    get temItens() {
-        return Array.isArray(this.itensCarrinho) && this.itensCarrinho.length > 0;
+    get temVeiculos() {
+        return this.itensCarrinho && this.itensCarrinho.length > 0;
     }
 
-    get quantidadeItens() {
-        return this.temItens ? this.itensCarrinho.length : 0;
+    get faltaDados() {
+        return !this.temCliente || !this.temVeiculos;
     }
 
+    get quantidadeVeiculos() {
+        return this.itensCarrinho ? this.itensCarrinho.length : 0;
+    }
+
+    // ========== DADOS DO CLIENTE ==========
+    
+    get clienteEmail() {
+        return this.clienteSelecionado?.Email || 'Não informado';
+    }
+
+    get clienteTelefone() {
+        return this.clienteSelecionado?.Phone || 'Não informado';
+    }
+
+    // ========== CÁLCULOS FINANCEIROS ==========
+    
     get subtotal() {
-        if (!this.temItens) {
-            return 0;
-        }
-        return this.itensCarrinho.reduce((soma, item) => soma + (Number(item.preco) || 0), 0);
-    }
-
-    get descontoPercentualNormalizado() {
-        const percentual = Number(this.descontoPercentual);
-
-        if (Number.isNaN(percentual)) {
-            return 0;
-        }
-
-        if (percentual < 0) {
-            return 0;
-        }
-
-        if (percentual > 100) {
-            return 100;
-        }
-
-        return percentual;
-    }
-
-    get descontoValor() {
-        return this.subtotal * (this.descontoPercentualNormalizado / 100);
-    }
-
-    get totalFinal() {
-        const total = this.subtotal - this.descontoValor;
-        return total > 0 ? total : 0;
+        if (!this.itensCarrinho) return 0;
+        return this.itensCarrinho.reduce((soma, item) => {
+            return soma + (item.preco || 0);
+        }, 0);
     }
 
     get subtotalFormatado() {
         return this.formatarMoeda(this.subtotal);
     }
 
-    get descontoValorFormatado() {
-        return this.formatarMoeda(this.descontoValor);
+    get temDesconto() {
+        return this.percentualDesconto > 0;
+    }
+
+    get valorDesconto() {
+        return (this.subtotal * this.percentualDesconto) / 100;
+    }
+
+    get valorDescontoFormatado() {
+        return this.formatarMoeda(this.valorDesconto);
+    }
+
+    get totalFinal() {
+        return this.subtotal - this.valorDesconto;
     }
 
     get totalFinalFormatado() {
         return this.formatarMoeda(this.totalFinal);
     }
 
-    get itensResumo() {
-        if (!this.temItens) {
-            return [];
-        }
-
-        return this.itensCarrinho.map(item => ({
-            ...item,
-            precoExibicao: this.formatarMoeda(item.preco)
-        }));
+    get mostrarParcelas() {
+        return this.formaPagamento === 'financiamento';
     }
 
-    get nomeCliente() {
-        return this.clienteSelecionado?.Name || 'Cliente não selecionado';
+    get valorParcela() {
+        if (!this.mostrarParcelas) return 0;
+        const parcelas = parseInt(this.numeroParcelas, 10);
+        return this.totalFinal / parcelas;
     }
 
-    get websiteCliente() {
-        return this.clienteSelecionado?.Website || 'Website não informado';
+    get valorParcelaFormatado() {
+        return this.formatarMoeda(this.valorParcela);
     }
 
-    get segmentoCliente() {
-        return this.clienteSelecionado?.Industry || 'Segmento não informado';
+    // ========== FORMATAÇÃO ==========
+    
+    formatarMoeda(valor) {
+        return valor.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
     }
 
-    get podeFinalizar() {
-        return this.temCliente && this.temItens;
-    }
-
-    get finalizarDesabilitado() {
-        return !this.podeFinalizar;
-    }
-
-    get mostrarAvisoPendencias() {
-        return !this.podeFinalizar;
-    }
-
-    get mensagemPendencias() {
-        if (!this.temCliente && !this.temItens) {
-            return 'Selecione um cliente e adicione veículos no carrinho para continuar.';
-        }
-
-        if (!this.temCliente) {
-            return 'Selecione um cliente antes de finalizar a proposta.';
-        }
-
-        return 'Adicione ao menos um veículo no carrinho para gerar a proposta.';
-    }
-
-    get textoItens() {
-        return this.quantidadeItens === 1 ? 'veículo' : 'veículos';
+    // ========== HANDLERS ==========
+    
+    handleFormaPagamentoChange(event) {
+        this.formaPagamento = event.detail.value;
     }
 
     handleDescontoChange(event) {
-        const novoValor = Number(event.detail.value);
-        this.descontoPercentual = Number.isNaN(novoValor) ? 0 : novoValor;
+        let valor = parseFloat(event.target.value) || 0;
+        // Limita o desconto entre 0 e 30%
+        if (valor < 0) valor = 0;
+        if (valor > 30) valor = 30;
+        this.percentualDesconto = valor;
+    }
+
+    handleParcelasChange(event) {
+        this.numeroParcelas = event.detail.value;
     }
 
     handleObservacoesChange(event) {
@@ -126,34 +140,28 @@ export default class PropostaVendas extends LightningElement {
     }
 
     handleCancelar() {
+        // Dispara evento para o pai limpar/cancelar
         this.dispatchEvent(new CustomEvent('cancelar'));
     }
 
     handleFinalizarVenda() {
-        if (!this.podeFinalizar) {
-            return;
-        }
+        // Monta objeto com todos os dados da proposta
+        const dadosProposta = {
+            cliente: this.clienteSelecionado,
+            veiculos: this.itensCarrinho,
+            formaPagamento: this.formaPagamento,
+            percentualDesconto: this.percentualDesconto,
+            valorDesconto: this.valorDesconto,
+            subtotal: this.subtotal,
+            totalFinal: this.totalFinal,
+            numeroParcelas: this.mostrarParcelas ? this.numeroParcelas : null,
+            valorParcela: this.mostrarParcelas ? this.valorParcela : null,
+            observacoes: this.observacoes
+        };
 
-        this.dispatchEvent(
-            new CustomEvent('finalizarvenda', {
-                detail: {
-                    cliente: this.clienteSelecionado,
-                    itens: this.itensCarrinho,
-                    quantidadeItens: this.quantidadeItens,
-                    subtotal: this.subtotal,
-                    descontoPercentual: this.descontoPercentualNormalizado,
-                    descontoValor: this.descontoValor,
-                    totalFinal: this.totalFinal,
-                    observacoes: this.observacoes
-                }
-            })
-        );
-    }
-
-    formatarMoeda(valor) {
-        return (Number(valor) || 0).toLocaleString('pt-BR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
+        // Dispara evento com os dados para o componente pai
+        this.dispatchEvent(new CustomEvent('finalizarvenda', {
+            detail: dadosProposta
+        }));
     }
 }

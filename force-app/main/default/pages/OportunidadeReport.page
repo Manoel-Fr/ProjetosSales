@@ -213,7 +213,7 @@
             <td>
                 <apex:repeat value="{!Opportunity.OpportunityLineItems}" var="item">
             <apex:outputText value="{0,number, ###,###,###,##0.00}">
-                        <apex:param value= "{!item.TotalPrice}" />
+                        <apex:param value="{!item.TotalPrice}" />
                     </apex:outputText>
                 </apex:repeat>
                 </td>  

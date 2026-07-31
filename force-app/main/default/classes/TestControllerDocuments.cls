@@ -78,11 +78,11 @@ public with sharing class TestControllerDocuments {
         Id cvId = [SELECT Id FROM ContentVersion WHERE Id = :cv.Id].Id;
 
         Test.startTest();
-        ControllerDocumento.setCategoria(cvId, 'Etiqueta do Produto');
+        ControllerDocumento.setCategoria(cvId, 'CNH');
         Test.stopTest();
 
         ContentVersion updated = [SELECT Categoria__c FROM ContentVersion WHERE Id = :cvId];
-        System.assertEquals('Etiqueta do Produto', updated.Categoria__c, 'Categoria deve ser Etiqueta do Produto');
+        System.assertEquals('CNH', updated.Categoria__c, 'Categoria deve ser CNH');
     }
 
     @isTest

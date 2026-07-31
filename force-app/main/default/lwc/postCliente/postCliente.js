@@ -23,7 +23,7 @@ export default class postCliente extends LightningElement {
             if(result.status === 'erro'){
                 this.showLog = true;
                 this.msg = result.mensagem;
- 
+
                 console.log(result);
                 this.fraseEfeito = 'Revise os erros!';
                 return;

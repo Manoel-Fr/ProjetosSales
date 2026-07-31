@@ -16,7 +16,7 @@
 
         <div class="main-container">
 
-            <!-- Seção de Upload -->
+            <!-- Seção de Upload
             <div class="upload-section">
                 <div class="upload-section-header">
                     <lightning-icon icon-name="utility:upload" size="x-small"></lightning-icon>
@@ -33,7 +33,17 @@
                         onuploadfinished={handleUpload}>
                     </lightning-file-upload>
                 </div>
-            </div>
+            </div> -->
+
+            <template if:false={photos.length}>
+                <div class="empty-hint slds-p-around_medium">
+                    <p class="slds-text-body_small slds-text-color_weak">
+                        Nenhuma imagem encontrada nos arquivos deste registro (png, jpg, jpeg, gif, webp, bmp).
+                        Anexe fotos em Arquivos e recarregue a página, ou confira permissões de leitura em
+                        ContentDocumentLink.
+                    </p>
+                </div>
+            </template>
 
             <!-- Lista de fotos para reordenar -->
             <template if:true={photos.length}>
@@ -44,6 +54,7 @@
                                 <th class="col-pos">#</th>
                                 <th class="col-thumb">Foto</th>
                                 <th class="col-title">Nome</th>
+                                <th class="col-categoria">Categoria</th>
                                 <th class="col-acoes">Ordem / Remover</th>
                             </tr>
                         </thead>
@@ -64,6 +75,10 @@
 
                                     <td class="col-title" title={photo.title}>
                                         <span class="photo-name">{photo.title}</span>
+                                    </td>
+
+                                    <td class="col-categoria">
+                                        <span class="categoria-badge">{photo.categoria}</span>
                                     </td>
 
                                     <td class="col-acoes">

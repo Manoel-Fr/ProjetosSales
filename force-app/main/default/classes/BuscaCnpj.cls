@@ -54,5 +54,3 @@ public with sharing class BuscaCnpj {
   
 
 }
-
-

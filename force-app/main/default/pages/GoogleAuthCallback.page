@@ -88,6 +88,5 @@
                 </apex:outputPanel>
             </div>
         </body>
-        <apex:page reflesh="true" />
     </html>
 </apex:page>

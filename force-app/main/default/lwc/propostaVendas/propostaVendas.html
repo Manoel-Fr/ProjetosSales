@@ -1,118 +1,186 @@
 <template>
+    <!-- ============================================
+         PROPOSTA DE VENDA
+         Componente filho - Finalização da venda
+    ============================================= -->
+    
     <div class="proposta-container">
+        
+        <!-- HEADER DA PROPOSTA -->
         <div class="proposta-header">
-            <div>
-                <p class="header-kicker">Fechamento da Venda</p>
-                <h2 class="header-titulo">Resumo final da proposta</h2>
-                <p class="header-subtitulo">{quantidadeItens} {textoItens} selecionados para esta negociação.</p>
-            </div>
-            <div class="header-total">
-                <span class="header-total-label">Total da proposta</span>
-                <strong class="header-total-valor">R$ {totalFinalFormatado}</strong>
+            <lightning-icon icon-name="standard:contract" size="medium"></lightning-icon>
+            <div class="header-texto">
+                <h2 class="proposta-titulo">Proposta de Venda</h2>
+                <p class="proposta-subtitulo">Revise os dados e finalize a negociação</p>
             </div>
         </div>
 
-        <template if:true={mostrarAvisoPendencias}>
-            <div class="aviso-pendencia" role="alert">
-                <lightning-icon icon-name="utility:warning" size="x-small" class="aviso-icon"></lightning-icon>
-                <span>{mensagemPendencias}</span>
+        <!-- ALERTA SE FALTAR DADOS -->
+        <template if:true={faltaDados}>
+            <div class="alerta-container">
+                <lightning-icon icon-name="utility:warning" size="small" variant="warning"></lightning-icon>
+                <div class="alerta-texto">
+                    <template if:false={temCliente}>
+                        <p>Selecione um cliente na aba "Clientes"</p>
+                    </template>
+                    <template if:false={temVeiculos}>
+                        <p>Adicione veículos ao carrinho na aba "Estoque"</p>
+                    </template>
+                </div>
             </div>
         </template>
 
-        <div class="proposta-grid">
-            <section class="bloco cliente-bloco">
-                <h3 class="bloco-titulo">Cliente</h3>
-                <template if:true={temCliente}>
-                    <div class="cliente-info">
-                        <p class="cliente-nome">{nomeCliente}</p>
-                        <p>{websiteCliente}</p>
-                        <p>{segmentoCliente}</p>
-                    </div>
-                </template>
-                <template if:false={temCliente}>
-                    <p class="bloco-vazio">Nenhum cliente selecionado.</p>
-                </template>
-            </section>
-
-            <section class="bloco financeiro-bloco">
-                <h3 class="bloco-titulo">Condições</h3>
-                <div class="campo-desconto">
-                    <lightning-input
-                        type="number"
-                        label="Desconto (%)"
-                        min="0"
-                        max="100"
-                        step="0.5"
-                        value={descontoPercentual}
-                        onchange={handleDescontoChange}>
-                    </lightning-input>
-                </div>
-                <div class="campo-observacoes">
-                    <lightning-textarea
-                        label="Observações"
-                        value={observacoes}
-                        placeholder="Informações adicionais para a proposta"
-                        onchange={handleObservacoesChange}>
-                    </lightning-textarea>
-                </div>
-            </section>
-        </div>
-
-        <section class="bloco itens-bloco">
-            <div class="itens-topo">
-                <h3 class="bloco-titulo">Itens da proposta</h3>
-                <span class="itens-quantidade">{quantidadeItens} {textoItens}</span>
-            </div>
-
-            <template if:true={temItens}>
-                <div class="itens-lista">
-                    <template for:each={itensResumo} for:item="item">
-                        <div class="item-linha" key={item.Id}>
-                            <div class="item-dados">
-                                <strong>{item.marca} {item.modelo}</strong>
-                                <span>{item.ano} | {item.kmFormatado} | {item.cor}</span>
-                            </div>
-                            <span class="item-valor">R$ {item.precoExibicao}</span>
+        <!-- CONTEÚDO PRINCIPAL (só mostra se tiver dados) -->
+        <template if:false={faltaDados}>
+            
+            <div class="proposta-grid">
+                
+                <!-- COLUNA ESQUERDA: Cliente e Veículos -->
+                <div class="coluna-dados">
+                    
+                    <!-- CARD DO CLIENTE -->
+                    <div class="secao-card">
+                        <div class="secao-header">
+                            <lightning-icon icon-name="standard:contact" size="small"></lightning-icon>
+                            <h3>Cliente</h3>
                         </div>
-                    </template>
-                </div>
-            </template>
+                        <div class="cliente-resumo">
+                            <p class="cliente-nome-destaque">{clienteSelecionado.Name}</p>
+                            <div class="cliente-detalhes">
+                                <p>
+                                    <lightning-icon icon-name="utility:email" size="xx-small"></lightning-icon>
+                                    {clienteEmail}
+                                </p>
+                                <p>
+                                    <lightning-icon icon-name="utility:call" size="xx-small"></lightning-icon>
+                                    {clienteTelefone}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
-            <template if:false={temItens}>
-                <p class="bloco-vazio">Nenhum veículo adicionado ao carrinho.</p>
-            </template>
+                    <!-- LISTA DE VEÍCULOS -->
+                    <div class="secao-card">
+                        <div class="secao-header">
+                            <lightning-icon icon-name="standard:vehicle" size="small"></lightning-icon>
+                            <h3>Veículos ({quantidadeVeiculos})</h3>
+                        </div>
+                        <div class="veiculos-lista">
+                            <template for:each={itensCarrinho} for:item="veiculo">
+                                <div key={veiculo.Id} class="veiculo-item">
+                                    <div class="veiculo-info-resumo">
+                                        <span class="veiculo-marca-modelo">{veiculo.marca} {veiculo.modelo}</span>
+                                        <span class="veiculo-ano">{veiculo.ano}</span>
+                                    </div>
+                                    <span class="veiculo-preco-item">R$ {veiculo.precoFormatado}</span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
 
-            <div class="resumo-financeiro">
-                <div class="linha-resumo">
-                    <span>Subtotal</span>
-                    <span>R$ {subtotalFormatado}</span>
                 </div>
-                <div class="linha-resumo">
-                    <span>Desconto</span>
-                    <span>- R$ {descontoValorFormatado}</span>
-                </div>
-                <div class="linha-resumo linha-total">
-                    <span>Total final</span>
-                    <span>R$ {totalFinalFormatado}</span>
+
+                <!-- COLUNA DIREITA: Condições e Resumo -->
+                <div class="coluna-resumo">
+                    
+                    <!-- CONDIÇÕES DE PAGAMENTO -->
+                    <div class="secao-card">
+                        <div class="secao-header">
+                            <lightning-icon icon-name="utility:moneybag" size="small"></lightning-icon>
+                            <h3>Condições de Pagamento</h3>
+                        </div>
+                        
+                        <div class="condicoes-form">
+                            <!-- Forma de Pagamento -->
+                            <lightning-combobox
+                                name="formaPagamento"
+                                label="Forma de Pagamento"
+                                value={formaPagamento}
+                                options={opcoesFormaPagamento}
+                                onchange={handleFormaPagamentoChange}>
+                            </lightning-combobox>
+
+                            <!-- Desconto -->
+                            <div class="desconto-container">
+                                <lightning-input
+                                    type="number"
+                                    label="Desconto (%)"
+                                    value={percentualDesconto}
+                                    min="0"
+                                    max="30"
+                                    step="0.5"
+                                    onchange={handleDescontoChange}>
+                                </lightning-input>
+                                <template if:true={temDesconto}>
+                                    <span class="desconto-valor">- R$ {valorDescontoFormatado}</span>
+                                </template>
+                            </div>
+
+                            <!-- Parcelas (só para financiamento) -->
+                            <template if:true={mostrarParcelas}>
+                                <lightning-combobox
+                                    name="parcelas"
+                                    label="Número de Parcelas"
+                                    value={numeroParcelas}
+                                    options={opcoesParcelas}
+                                    onchange={handleParcelasChange}>
+                                </lightning-combobox>
+                                <div class="parcela-info">
+                                    <span>{numeroParcelas}x de</span>
+                                    <span class="parcela-valor">R$ {valorParcelaFormatado}</span>
+                                </div>
+                            </template>
+
+                            <!-- Observações -->
+                            <lightning-textarea
+                                label="Observações"
+                                placeholder="Informações adicionais sobre a venda..."
+                                value={observacoes}
+                                max-length="500"
+                                onchange={handleObservacoesChange}>
+                            </lightning-textarea>
+                        </div>
+                    </div>
+
+                    <!-- RESUMO FINANCEIRO -->
+                    <div class="secao-card resumo-financeiro">
+                        <div class="resumo-linha">
+                            <span>Subtotal</span>
+                            <span>R$ {subtotalFormatado}</span>
+                        </div>
+                        <template if:true={temDesconto}>
+                            <div class="resumo-linha desconto">
+                                <span>Desconto ({percentualDesconto}%)</span>
+                                <span>- R$ {valorDescontoFormatado}</span>
+                            </div>
+                        </template>
+                        <div class="resumo-linha total">
+                            <span>Total</span>
+                            <span>R$ {totalFinalFormatado}</span>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-        </section>
 
-        <div class="acoes-footer">
-            <lightning-button
-                label="Cancelar"
-                variant="neutral"
-                icon-name="utility:back"
-                onclick={handleCancelar}>
-            </lightning-button>
-            <lightning-button
-                label="Finalizar Venda"
-                variant="brand"
-                icon-name="utility:check"
-                onclick={handleFinalizarVenda}
-                disabled={finalizarDesabilitado}
-                class="btn-finalizar">
-            </lightning-button>
-        </div>
+            <!-- BOTÕES DE AÇÃO -->
+            <div class="acoes-container">
+                <lightning-button
+                    label="Cancelar"
+                    variant="neutral"
+                    icon-name="utility:close"
+                    onclick={handleCancelar}>
+                </lightning-button>
+                <lightning-button
+                    label="Finalizar Venda"
+                    variant="brand"
+                    icon-name="utility:check"
+                    onclick={handleFinalizarVenda}
+                    class="btn-finalizar">
+                </lightning-button>
+            </div>
+
+        </template>
+
     </div>
 </template>

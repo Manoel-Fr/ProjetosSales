@@ -175,6 +175,4 @@ export default class GetMoedas extends LightningElement {
       
  
     };
-} 
-     
-
+}
